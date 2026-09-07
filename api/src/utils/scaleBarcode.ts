@@ -20,7 +20,7 @@ export interface ParsedScaleBarcode {
   isScale: boolean;
   /** El EAN-13 completo (13 dígitos). */
   raw: string;
-  /** Código interno de balanza (scaleCode), 4 dígitos. */
+  /** Código interno de balanza (scaleCode), sin ceros iniciales (ej "101"). */
   code: string;
   /** Peso en gramos (entero). */
   weightGrams: number;
@@ -49,7 +49,11 @@ export const parseScaleBarcode = (raw: string): ParsedScaleBarcode | null => {
   if (!raw || raw.length !== 13 || !/^\d+$/.test(raw)) return null;
   if (!raw.startsWith(SCALE_PREFIX)) return { isScale: false, raw, code: "", weightGrams: 0, weightKg: 0 };
 
-  const code = raw.substring(2, 6);
+  // El campo "código interno" ocupa 4 posiciones fijas en el EAN-13, pero el
+  // scaleCode guardado en el ERP es de 3 dígitos (ej PLU 101 → la etiqueta
+  // imprime 0101). Normalizamos quitando ceros iniciales para que matchee
+  // contra PriceKgPrice.scaleCode (que guarda "101").
+  const code = String(Number.parseInt(raw.substring(2, 6), 10));
   const weightGrams = Number.parseInt(raw.substring(6, 12), 10);
   return {
     isScale: true,

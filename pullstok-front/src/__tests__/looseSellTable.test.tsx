@@ -38,8 +38,8 @@ describe("LooseSellTable — columna de código de balanza", () => {
   });
 
   it("muestra el scaleCode en mono cuando la celda lo tiene", () => {
-    renderTable([row({ cellKey: "PERRO:b1:t1", scaleCode: "0101" })]);
-    expect(screen.getByText("0101")).toBeInTheDocument();
+    renderTable([row({ cellKey: "PERRO:b1:t1", scaleCode: "101" })]);
+    expect(screen.getByText("101")).toBeInTheDocument();
   });
 
   it("muestra un guión cuando la celda no tiene código de balanza", () => {

@@ -15,21 +15,21 @@ const cell = (over: Partial<CellLike> = {}): CellLike => ({
   ...over,
 });
 
-describe("planScaleCodes — códigos corridos dentro del límite de la balanza", () => {
-  it("arranca en 1001 y ordena por marca madre → tipo → especie", () => {
+describe("planScaleCodes — códigos corridos de 3 dígitos dentro del límite", () => {
+  it("arranca en 101 y ordena por marca madre → tipo → especie", () => {
     const plan = planScaleCodes([
       cell({ id: "a", parentBrand: "CAT CHOW", typeName: "Kitten" }),
       cell({ id: "b", parentBrand: "CAT CHOW", typeName: "Adulto" }),
       cell({ id: "c", parentBrand: "AGILITY", typeName: "Adulto" }),
     ]);
     // AGILITY (A) antes que CAT CHOW (C); dentro de CAT CHOW, Adulto antes de Kitten.
-    expect(plan.map((p) => p.scaleCode)).toEqual(["1001", "1002", "1003"]);
+    expect(plan.map((p) => p.scaleCode)).toEqual(["101", "102", "103"]);
     expect(plan[0].parentBrand).toBe("AGILITY");
     expect(plan[1].typeName).toBe("Adulto");
     expect(plan[2].typeName).toBe("Kitten");
   });
 
-  it("todos los códigos son 4 dígitos, menores a 4000 y únicos", () => {
+  it("todos los códigos son de 3 dígitos, únicos y dentro del rango", () => {
     const plan = planScaleCodes(
       Array.from({ length: 200 }, (_, i) =>
         cell({ id: `c${i}`, parentBrand: `MARCA${String(i).padStart(3, "0")}` }),
@@ -38,11 +38,11 @@ describe("planScaleCodes — códigos corridos dentro del límite de la balanza"
     const set = new Set(plan.map((p) => p.scaleCode));
     expect(set.size).toBe(200);
     for (const p of plan) {
-      expect(p.scaleCode).toMatch(/^\d{4}$/);
-      expect(Number(p.scaleCode)).toBeLessThan(4000);
+      expect(p.scaleCode).toMatch(/^\d{3}$/);
+      expect(Number(p.scaleCode)).toBeLessThan(1000);
     }
-    expect(plan[0].scaleCode).toBe("1001");
-    expect(plan[199].scaleCode).toBe("1200"); // 1001 + 199
+    expect(plan[0].scaleCode).toBe("101");
+    expect(plan[199].scaleCode).toBe("300"); // 101 + 199
   });
 
   it("es determinista aunque las celdas vengan en otro orden", () => {
@@ -58,14 +58,14 @@ describe("planScaleCodes — códigos corridos dentro del límite de la balanza"
     expect(fwd).toEqual(rev);
   });
 
-  it("marca con '0000' las celdas que no entran en el rango disponible", () => {
+  it("marca con '0000' las celdas que no entran en el rango de 3 dígitos", () => {
     const many = Array.from({ length: 3000 }, (_, i) =>
       cell({ id: `c${i}`, parentBrand: `P${String(i).padStart(4, "0")}` }),
     );
     const plan = planScaleCodes(many);
-    expect(plan[2998].scaleCode).toBe("3999"); // último dentro del rango
-    expect(plan[2999].scaleCode).toBe("0000"); // se desborda
-    expect(plan.filter((p) => p.scaleCode === "0000")).toHaveLength(1);
+    expect(plan[898].scaleCode).toBe("999"); // último código dentro del rango (101..999)
+    expect(plan[899].scaleCode).toBe("0000"); // se desborda
+    expect(plan.filter((p) => p.scaleCode === "0000")).toHaveLength(3000 - 899);
   });
 });
 

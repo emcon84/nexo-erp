@@ -3,9 +3,12 @@
  * scaleCode + peso en gramos + verificador) a las CELDAS de la planilla
  * "Precios por kilo" (los "productos sueltos": marca × tipo × especie).
  *
- * Esquema: códigos CORRIDOS a partir de SCALE_CODE_BASE (1001), ordenados por
- * marca madre → tipo → especie. El límite de la balanza Systel Cuora rechaza
- * códigos ≥ 4000, así que TODOS los códigos quedan en [1001, 3999].
+ * Esquema: códigos CORRIDOS a partir de SCALE_CODE_BASE (101), ordenados por
+ * marca madre → tipo → especie, en formato de 3 dígitos (101..999). La balanza
+ * Systel Cuora imprime el PLU en un campo de 4 dígitos dentro de la etiqueta
+ * (101 → 0101), pero el scaleCode del ERP es el número de 3 dígitos que tipea
+ * el operador. El límite de la balanza rechaza códigos ≥ 4000, así que el rango
+ * de 3 dígitos [101, 999] queda muy por debajo.
  *
  * ANTES se usaba '<familia 2> + <índice 2>' (familia = índice alfabético de la
  * media madre), pero con 46 marcas madre generaba códigos 40xx-46xx que la
@@ -28,10 +31,10 @@ import { basePrisma } from "../src/config/db";
 
 const DEFAULT_ORG_SLUG = "el-almacen-de-las-mascotas";
 
-/** Primer código a usar (1001 → evita doble cero inicial). */
-const SCALE_CODE_BASE = 1000;
-/** La balanza rechaza códigos ≥ 4000 (confirmado): tope inclusive a 3999. */
-const SCALE_CODE_LIMIT = 2999; // cantidad de códigos disponibles (1001..3999)
+/** Primer código a usar (101 → códigos de 3 dígitos: el operador tipea menos). */
+const SCALE_CODE_BASE = 100;
+/** Capacidad de 3 dígitos (101..999) — la balanza imprime el PLU en 4 posiciones. */
+const SCALE_CODE_LIMIT = 899; // cantidad de códigos disponibles (101..999)
 
 export const hasApplyFlag = (argv: string[] = process.argv): boolean =>
   argv.includes("--apply");
@@ -92,11 +95,11 @@ export const planScaleCodes = (cells: CellLike[]): PlannedCode[] => {
 
   const out: PlannedCode[] = [];
   sorted.forEach((c, i) => {
-    const num = SCALE_CODE_BASE + 1 + i; // 1001, 1002, ...
+    const num = SCALE_CODE_BASE + 1 + i; // 101, 102, ...
     const scaleCode =
       i + 1 > SCALE_CODE_LIMIT
         ? "0000"
-        : String(num).padStart(4, "0");
+        : String(num); // 3 dígitos: 101..999 (sin ceros a la izquierda)
     out.push({
       priceKgPriceId: c.id,
       scaleCode,
