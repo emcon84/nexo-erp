@@ -55,13 +55,31 @@ import {
   downloadScaleCsv,
   type PriceKgPlanEntry,
 } from "@/services/priceKgPlan";
-import { PrintHeader } from "@/components/molecules/PrintHeader";
 
 // Precios sueltos SIEMPRE redondos (decisión del usuario): sin decimales.
 // Key de la matriz de celdas: especie primero (una marca/tipo AMBOS tiene una
 // celda distinta por planilla). Sin species, editar Gatos pisaría Perros.
 const cellKey = (species: PriceKgSpecies, brandId: string, typeId: string) =>
   `${species}:${brandId}:${typeId}`;
+
+// Abreviatura de los nombres de tipo en la IMPRESIÓN: acorta los largos para
+// que las columnas "cod./$" por tipo no se estiren y el print entre en pocas
+// hojas. Fuera de este mapa se usa el nombre completo.
+const TYPE_ABBREV: Record<string, string> = {
+  ADULTO: "Adulto",
+  CACHORRO: "Cach.",
+  KITTEN: "Kitten",
+  STERILIZED: "Ster.",
+  LIGHT: "Light",
+  DERMA: "Derma",
+  URINARY: "Urin.",
+  SENIOR: "Sen.",
+  GASTRO: "Gastro",
+  GASTROINTESTINAL: "Gastro",
+  CORDERO: "Cord",
+  ARROZ: "Arroz",
+};
+const typeHeader = (name: string): string => TYPE_ABBREV[name.toUpperCase()] ?? name;
 
 // --- Especie (Perro/Gato): mapeo species ↔ checks + componente compartido ---
 // La planilla se edita por especie (matriz Perros vs Gatos), así que cada tipo
@@ -467,10 +485,6 @@ export const PriceKgUpdate = () => {
   // @media print en index.css) y el botón solo dispara window.print(). NO usar
   // estado + afterprint: al CANCELAR el diálogo afterprint no se dispara en
   // varios navegadores y `printing` quedaba en true → el botón moría.
-  const printTitle =
-    activeSpecies === "PERRO"
-      ? "Precios por kilo suelto — Perro"
-      : "Precios por kilo suelto — Gato";
   const handlePrint = () => {
     window.print();
   };
@@ -929,10 +943,6 @@ export const PriceKgUpdate = () => {
           imprimir (ver @media print en index.css). Sin estado: el botón solo
           llama window.print() y el navegador decide cuándo muestra esto. */}
       <div className="print-area hidden print:block" aria-hidden="true">
-        <PrintHeader
-          title={printTitle}
-          subtitle={`${new Date().toLocaleDateString("es-AR")} · ${loadedCount} celdas`}
-        />
         {(["PERRO", "GATO"] as const).map((sp) => {
           const spLabel = sp === "PERRO" ? "Perros" : "Gatos";
           const spTypes = types.filter((t) => t.species === sp || t.species === "AMBOS");
@@ -942,24 +952,24 @@ export const PriceKgUpdate = () => {
               key={sp}
               className={`mb-4 text-[11px] leading-tight ${sp === "GATO" ? "break-before-page" : ""}`}
             >
-              <h3 className="mb-1 text-sm font-bold">{spLabel}</h3>
-              <Table>
+              <h3 className="mb-1 text-lg font-bold">{spLabel}</h3>
+              <Table className="border-collapse">
                 <TableHeader>
                   <TableRow>
-                    <TableHead rowSpan={2} className="px-1 py-0.5">
+                    <TableHead rowSpan={2} className="px-1 py-0.5 border border-black">
                       Marca
                     </TableHead>
                     {spTypes.map((t) => (
-                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 text-center">
-                        {t.name}
+                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 border border-black text-center">
+                        {typeHeader(t.name)}
                       </TableHead>
                     ))}
                   </TableRow>
                   <TableRow>
                     {spTypes.flatMap((t) => (
                       <Fragment key={t.id}>
-                        <TableHead className="px-1 py-0.5 text-right">cod.</TableHead>
-                        <TableHead className="px-1 py-0.5 text-right">$</TableHead>
+                        <TableHead className="px-1 py-0.5 border border-black text-right">cod.</TableHead>
+                        <TableHead className="px-1 py-0.5 border border-black text-right">$</TableHead>
                       </Fragment>
                     ))}
                   </TableRow>
@@ -967,7 +977,7 @@ export const PriceKgUpdate = () => {
                 <TableBody>
                   {spBrands.map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell className="px-1 py-0.5 font-medium">{b.name}</TableCell>
+                      <TableCell className="px-1 py-0.5 border border-black font-medium">{b.name}</TableCell>
                       {spTypes.flatMap((t) => {
                         const key = cellKey(sp, b.id, t.id);
                         const raw = (cells[key] ?? "").trim();
@@ -976,10 +986,10 @@ export const PriceKgUpdate = () => {
                         const code = cellCodes[key];
                         return (
                           <Fragment key={t.id}>
-                            <TableCell className="px-1 py-0.5 text-right font-semibold tabular-nums">
+                            <TableCell className="px-1 py-0.5 border border-black text-right font-semibold tabular-nums">
                               {code ?? "—"}
                             </TableCell>
-                            <TableCell className="px-1 py-0.5 text-right tabular-nums">
+                            <TableCell className="px-1 py-0.5 border border-black text-right tabular-nums">
                               {valid
                                 ? price.toLocaleString("es-AR", { maximumFractionDigits: 0 })
                                 : "—"}
