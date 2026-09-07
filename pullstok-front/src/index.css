@@ -154,6 +154,17 @@
   margin: 12mm;
 }
 
+/* Impresión de la planilla de precios por kilo: A4 horizontal (landscape) para
+   que las 11 columnas (Marca + tipos × cod./$) entren sin recortarse. Named
+   page: solo afecta a .print-planilla; la factura fiscal sigue vertical. */
+@page print-planilla {
+  size: A4 landscape;
+  margin: 10mm;
+}
+.print-area.print-planilla {
+  page: print-planilla;
+}
+
 /* Print: only show the product list print area */
 @media print {
   body * {

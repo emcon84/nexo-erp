@@ -911,7 +911,7 @@ export const PriceKgUpdate = () => {
                               aria-label={`${b.name} ${t.name} código balanza`}
                               title="Código balanza (auto-asignado)"
                             >
-                              {code ?? "—"}
+                              {code ?? ""}
                             </div>
                           </TableCell>
                         );
@@ -942,7 +942,7 @@ export const PriceKgUpdate = () => {
       {/* Print area: siempre en el DOM, oculto en pantalla y visible solo al
           imprimir (ver @media print en index.css). Sin estado: el botón solo
           llama window.print() y el navegador decide cuándo muestra esto. */}
-      <div className="print-area hidden print:block" aria-hidden="true">
+      <div className="print-area print-planilla hidden print:block" aria-hidden="true">
         {(["PERRO", "GATO"] as const).map((sp) => {
           const spLabel = sp === "PERRO" ? "Perros" : "Gatos";
           const spTypes = types.filter((t) => t.species === sp || t.species === "AMBOS");
@@ -956,11 +956,11 @@ export const PriceKgUpdate = () => {
               <Table className="border-collapse">
                 <TableHeader>
                   <TableRow>
-                    <TableHead rowSpan={2} className="px-1 py-0.5 border border-black">
+                    <TableHead rowSpan={2} className="px-1 py-0.5 border border-black print:h-6">
                       Marca
                     </TableHead>
                     {spTypes.map((t) => (
-                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 border border-black text-center">
+                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 border border-black text-center print:h-6">
                         {typeHeader(t.name)}
                       </TableHead>
                     ))}
@@ -968,8 +968,8 @@ export const PriceKgUpdate = () => {
                   <TableRow>
                     {spTypes.flatMap((t) => (
                       <Fragment key={t.id}>
-                        <TableHead className="px-1 py-0.5 border border-black text-right">cod.</TableHead>
-                        <TableHead className="px-1 py-0.5 border border-black text-right">$</TableHead>
+                        <TableHead className="px-1 py-0.5 border border-black text-right print:h-6">cod.</TableHead>
+                        <TableHead className="px-1 py-0.5 border border-black text-right print:h-6">$</TableHead>
                       </Fragment>
                     ))}
                   </TableRow>
@@ -987,12 +987,12 @@ export const PriceKgUpdate = () => {
                         return (
                           <Fragment key={t.id}>
                             <TableCell className="px-1 py-0.5 border border-black text-right font-semibold tabular-nums">
-                              {code ?? "—"}
+                              {code ?? ""}
                             </TableCell>
                             <TableCell className="px-1 py-0.5 border border-black text-right tabular-nums">
                               {valid
                                 ? price.toLocaleString("es-AR", { maximumFractionDigits: 0 })
-                                : "—"}
+                                : ""}
                             </TableCell>
                           </Fragment>
                         );
