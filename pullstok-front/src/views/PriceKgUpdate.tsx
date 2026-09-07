@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { Download } from "lucide-react";
 import { toast } from "react-toastify";
@@ -58,12 +58,6 @@ import {
 import { PrintHeader } from "@/components/molecules/PrintHeader";
 
 // Precios sueltos SIEMPRE redondos (decisión del usuario): sin decimales.
-const formatPrice = (n: number) =>
-  `$${n.toLocaleString("es-AR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`;
-
 // Key de la matriz de celdas: especie primero (una marca/tipo AMBOS tiene una
 // celda distinta por planilla). Sin species, editar Gatos pisaría Perros.
 const cellKey = (species: PriceKgSpecies, brandId: string, typeId: string) =>
@@ -952,11 +946,21 @@ export const PriceKgUpdate = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="px-1 py-0.5">Marca</TableHead>
+                    <TableHead rowSpan={2} className="px-1 py-0.5">
+                      Marca
+                    </TableHead>
                     {spTypes.map((t) => (
-                      <TableHead key={t.id} className="px-1 py-0.5 text-right">
+                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 text-center">
                         {t.name}
                       </TableHead>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    {spTypes.flatMap((t) => (
+                      <Fragment key={t.id}>
+                        <TableHead className="px-1 py-0.5 text-right">cod.</TableHead>
+                        <TableHead className="px-1 py-0.5 text-right">$</TableHead>
+                      </Fragment>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -964,21 +968,23 @@ export const PriceKgUpdate = () => {
                   {spBrands.map((b) => (
                     <TableRow key={b.id}>
                       <TableCell className="px-1 py-0.5 font-medium">{b.name}</TableCell>
-                      {spTypes.map((t) => {
+                      {spTypes.flatMap((t) => {
                         const key = cellKey(sp, b.id, t.id);
                         const raw = (cells[key] ?? "").trim();
                         const price = parseFloat(raw);
                         const valid = raw !== "" && !Number.isNaN(price) && price > 0;
                         const code = cellCodes[key];
                         return (
-                          <TableCell key={t.id} className="px-1 py-0.5 text-right tabular-nums">
-                            {valid ? formatPrice(price) : "—"}
-                            {code ? (
-                              <div className="text-[9px] leading-none font-mono text-muted-foreground">
-                                {code}
-                              </div>
-                            ) : null}
-                          </TableCell>
+                          <Fragment key={t.id}>
+                            <TableCell className="px-1 py-0.5 text-right font-semibold tabular-nums">
+                              {code ?? "—"}
+                            </TableCell>
+                            <TableCell className="px-1 py-0.5 text-right tabular-nums">
+                              {valid
+                                ? price.toLocaleString("es-AR", { maximumFractionDigits: 0 })
+                                : "—"}
+                            </TableCell>
+                          </Fragment>
                         );
                       })}
                     </TableRow>
