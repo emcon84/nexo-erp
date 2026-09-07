@@ -121,6 +121,20 @@ async function main() {
     `✅ Datos transaccionales limpiados: ${deletedInvoices.count} facturas, ${deletedOrders.count} órdenes, ${deletedQuotations.count} cotizaciones, ${deletedSales.count} ventas, ${deletedReceipts.count} comprobantes, ${resetCounters.count} contadores reseteados a 0`
   );
 
+  // Limpieza de categorías: la org demo pudo quedar contaminada con el árbol de
+  // otro negocio (ej. se cargaron las categorías del almacén). Se desvinculan
+  // los productos (Product.category no tiene cascade) y se borra TODO el árbol
+  // de categorías de la org demo; las variantes/opciones caen en cascada (FK ON
+  // DELETE CASCADE). Recién después se siembra el árbol genérico.
+  await prisma.product.updateMany({
+    where: { organizationId: org.id },
+    data: { categoryId: null },
+  });
+  const deletedCats = await prisma.category.deleteMany({
+    where: { organizationId: org.id },
+  });
+  console.log(`🧹 Categorías de la org demo limpiadas: ${deletedCats.count}`);
+
   // 4) Full category tree + variants (mirrors seed.ts)
   const CATEGORY_TREE = [
     {

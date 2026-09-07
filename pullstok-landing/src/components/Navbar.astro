@@ -1,8 +1,8 @@
 ---
 import Logo from "@/components/Logo.astro";
+import { DEMO_WHATSAPP_URL } from "@/consts";
 
 const APP_URL = "https://app.pullstok.com";
-const DEMO_URL = "https://app.pullstok.com/?demo=1";
 
 const links = [
   { href: "#caracteristicas", label: "Características" },
@@ -83,7 +83,7 @@ const links = [
       >
         Ingresar
       </a>
-      <a href={DEMO_URL} class="btn btn-primary h-10 px-5 text-sm">Probá el demo</a>
+      <a href={DEMO_WHATSAPP_URL} class="btn btn-primary h-10 px-5 text-sm">Pedí acceso</a>
     </div>
 
     <!-- Toggle mobile -->
@@ -165,8 +165,8 @@ const links = [
         >
           Ingresar
         </a>
-        <a href={DEMO_URL} class="btn btn-primary mt-1 h-11 w-full text-sm">
-          Probá el demo
+        <a href={DEMO_WHATSAPP_URL} class="btn btn-primary mt-1 h-11 w-full text-sm">
+          Pedí acceso
         </a>
       </div>
     </details>
