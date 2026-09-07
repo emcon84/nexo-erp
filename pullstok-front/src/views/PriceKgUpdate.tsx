@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Download } from "lucide-react";
 import { toast } from "react-toastify";
@@ -55,31 +55,19 @@ import {
   downloadScaleCsv,
   type PriceKgPlanEntry,
 } from "@/services/priceKgPlan";
+import { PrintHeader } from "@/components/molecules/PrintHeader";
 
 // Precios sueltos SIEMPRE redondos (decisión del usuario): sin decimales.
+const formatPrice = (n: number) =>
+  `$${n.toLocaleString("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
+
 // Key de la matriz de celdas: especie primero (una marca/tipo AMBOS tiene una
 // celda distinta por planilla). Sin species, editar Gatos pisaría Perros.
 const cellKey = (species: PriceKgSpecies, brandId: string, typeId: string) =>
   `${species}:${brandId}:${typeId}`;
-
-// Abreviatura de los nombres de tipo en la IMPRESIÓN: acorta los largos para
-// que las columnas "cod./$" por tipo no se estiren y el print entre en pocas
-// hojas. Fuera de este mapa se usa el nombre completo.
-const TYPE_ABBREV: Record<string, string> = {
-  ADULTO: "Adulto",
-  CACHORRO: "Cach.",
-  KITTEN: "Kitten",
-  STERILIZED: "Ster.",
-  LIGHT: "Light",
-  DERMA: "Derma",
-  URINARY: "Urin.",
-  SENIOR: "Sen.",
-  GASTRO: "Gastro",
-  GASTROINTESTINAL: "Gastro",
-  CORDERO: "Cord",
-  ARROZ: "Arroz",
-};
-const typeHeader = (name: string): string => TYPE_ABBREV[name.toUpperCase()] ?? name;
 
 // --- Especie (Perro/Gato): mapeo species ↔ checks + componente compartido ---
 // La planilla se edita por especie (matriz Perros vs Gatos), así que cada tipo
@@ -485,6 +473,10 @@ export const PriceKgUpdate = () => {
   // @media print en index.css) y el botón solo dispara window.print(). NO usar
   // estado + afterprint: al CANCELAR el diálogo afterprint no se dispara en
   // varios navegadores y `printing` quedaba en true → el botón moría.
+  const printTitle =
+    activeSpecies === "PERRO"
+      ? "Precios por kilo suelto — Perro"
+      : "Precios por kilo suelto — Gato";
   const handlePrint = () => {
     window.print();
   };
@@ -911,7 +903,7 @@ export const PriceKgUpdate = () => {
                               aria-label={`${b.name} ${t.name} código balanza`}
                               title="Código balanza (auto-asignado)"
                             >
-                              {code ?? ""}
+                              {code ?? "—"}
                             </div>
                           </TableCell>
                         );
@@ -943,67 +935,39 @@ export const PriceKgUpdate = () => {
           imprimir (ver @media print en index.css). Sin estado: el botón solo
           llama window.print() y el navegador decide cuándo muestra esto. */}
       <div className="print-area hidden print:block" aria-hidden="true">
-        {(["PERRO", "GATO"] as const).map((sp) => {
-          const spLabel = sp === "PERRO" ? "Perros" : "Gatos";
-          const spTypes = types.filter((t) => t.species === sp || t.species === "AMBOS");
-          const spBrands = brands.filter((b) => b.species === sp || b.species === "AMBOS");
-          return (
-            <div
-              key={sp}
-              className={`mb-4 text-[11px] leading-tight ${sp === "GATO" ? "break-before-page" : ""}`}
-            >
-              <h3 className="mb-1 text-lg font-bold">{spLabel}</h3>
-              <Table className="border-collapse text-[11px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead rowSpan={2} className="px-1 py-0.5 border border-black print:h-6">
-                      Marca
-                    </TableHead>
-                    {spTypes.map((t) => (
-                      <TableHead key={t.id} colSpan={2} className="px-1 py-0.5 border border-black text-center print:h-6">
-                        {typeHeader(t.name)}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    {spTypes.flatMap((t) => (
-                      <Fragment key={t.id}>
-                        <TableHead className="px-1 py-0.5 border border-black text-right print:h-6">cod.</TableHead>
-                        <TableHead className="px-1 py-0.5 border border-black text-right print:h-6">$</TableHead>
-                      </Fragment>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {spBrands.map((b) => (
-                    <TableRow key={b.id}>
-                      <TableCell className="w-[21%] truncate px-1 py-0.5 border border-black font-medium">{b.name}</TableCell>
-                      {spTypes.flatMap((t) => {
-                        const key = cellKey(sp, b.id, t.id);
-                        const raw = (cells[key] ?? "").trim();
-                        const price = parseFloat(raw);
-                        const valid = raw !== "" && !Number.isNaN(price) && price > 0;
-                        const code = cellCodes[key];
-                        return (
-                          <Fragment key={t.id}>
-                            <TableCell className="px-1 py-0.5 border border-black text-right font-semibold tabular-nums">
-                              {code ?? ""}
-                            </TableCell>
-                            <TableCell className="px-1 py-0.5 border border-black text-right tabular-nums">
-                              {valid
-                                ? price.toLocaleString("es-AR", { maximumFractionDigits: 0 })
-                                : ""}
-                            </TableCell>
-                          </Fragment>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          );
-        })}
+        <PrintHeader
+          title={printTitle}
+          subtitle={`${new Date().toLocaleDateString("es-AR")} · ${loadedCount} celdas`}
+        />
+        <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Marca</TableHead>
+                {visibleTypes.map((t) => (
+                  <TableHead key={t.id} className="text-right">
+                    {t.name}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleBrands.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">{b.name}</TableCell>
+                  {visibleTypes.map((t) => {
+                    const raw = (cells[cellKey(activeSpecies, b.id, t.id)] ?? "").trim();
+                    const price = parseFloat(raw);
+                    const valid = raw !== "" && !Number.isNaN(price) && price > 0;
+                    return (
+                      <TableCell key={t.id} className="text-right tabular-nums">
+                        {valid ? formatPrice(price) : "—"}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
     </div>
   );
