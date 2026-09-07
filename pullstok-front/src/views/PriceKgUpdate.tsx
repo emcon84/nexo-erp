@@ -939,35 +939,55 @@ export const PriceKgUpdate = () => {
           title={printTitle}
           subtitle={`${new Date().toLocaleDateString("es-AR")} · ${loadedCount} celdas`}
         />
-        <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Marca</TableHead>
-                {visibleTypes.map((t) => (
-                  <TableHead key={t.id} className="text-right">
-                    {t.name}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleBrands.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.name}</TableCell>
-                  {visibleTypes.map((t) => {
-                    const raw = (cells[cellKey(activeSpecies, b.id, t.id)] ?? "").trim();
-                    const price = parseFloat(raw);
-                    const valid = raw !== "" && !Number.isNaN(price) && price > 0;
-                    return (
-                      <TableCell key={t.id} className="text-right tabular-nums">
-                        {valid ? formatPrice(price) : "—"}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        {(["PERRO", "GATO"] as const).map((sp) => {
+          const spLabel = sp === "PERRO" ? "Perros" : "Gatos";
+          const spTypes = types.filter((t) => t.species === sp || t.species === "AMBOS");
+          const spBrands = brands.filter((b) => b.species === sp || b.species === "AMBOS");
+          return (
+            <div
+              key={sp}
+              className={`mb-4 text-[11px] leading-tight ${sp === "GATO" ? "break-before-page" : ""}`}
+            >
+              <h3 className="mb-1 text-sm font-bold">{spLabel}</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-1 py-0.5">Marca</TableHead>
+                    {spTypes.map((t) => (
+                      <TableHead key={t.id} className="px-1 py-0.5 text-right">
+                        {t.name}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {spBrands.map((b) => (
+                    <TableRow key={b.id}>
+                      <TableCell className="px-1 py-0.5 font-medium">{b.name}</TableCell>
+                      {spTypes.map((t) => {
+                        const key = cellKey(sp, b.id, t.id);
+                        const raw = (cells[key] ?? "").trim();
+                        const price = parseFloat(raw);
+                        const valid = raw !== "" && !Number.isNaN(price) && price > 0;
+                        const code = cellCodes[key];
+                        return (
+                          <TableCell key={t.id} className="px-1 py-0.5 text-right tabular-nums">
+                            {valid ? formatPrice(price) : "—"}
+                            {code ? (
+                              <div className="text-[9px] leading-none font-mono text-muted-foreground">
+                                {code}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          );
+        })}
         </div>
     </div>
   );
