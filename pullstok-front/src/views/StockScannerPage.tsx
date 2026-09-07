@@ -534,6 +534,8 @@ export const StockScannerPage = () => {
         setKgEditOpen(false);
         playBeep();
         toast.success(`Precio por kg asignado: ${formatCurrency(n)}`);
+        // Refresca el catálogo offline para que el próximo scan muestre el precio por kg nuevo.
+        void syncOfflineCatalog().catch(() => {});
       } else {
         toast.error(data.message || "Error al asignar precio por kg");
       }
@@ -564,6 +566,8 @@ export const StockScannerPage = () => {
         setPriceEditOpen(false);
         playBeep();
         toast.success(`Precio actualizado: ${formatCurrency(n)}`);
+        // Refresca el catálogo offline para que el próximo scan muestre el precio nuevo.
+        void syncOfflineCatalog().catch(() => {});
       } else {
         toast.error(data.message || "Error al actualizar el precio");
       }
