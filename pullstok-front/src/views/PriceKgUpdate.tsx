@@ -942,7 +942,7 @@ export const PriceKgUpdate = () => {
       {/* Print area: siempre en el DOM, oculto en pantalla y visible solo al
           imprimir (ver @media print en index.css). Sin estado: el botón solo
           llama window.print() y el navegador decide cuándo muestra esto. */}
-      <div className="print-area print-planilla hidden print:block" aria-hidden="true">
+      <div className="print-area hidden print:block" aria-hidden="true">
         {(["PERRO", "GATO"] as const).map((sp) => {
           const spLabel = sp === "PERRO" ? "Perros" : "Gatos";
           const spTypes = types.filter((t) => t.species === sp || t.species === "AMBOS");
@@ -953,7 +953,7 @@ export const PriceKgUpdate = () => {
               className={`mb-4 text-[11px] leading-tight ${sp === "GATO" ? "break-before-page" : ""}`}
             >
               <h3 className="mb-1 text-lg font-bold">{spLabel}</h3>
-              <Table className="border-collapse">
+              <Table className="border-collapse text-[11px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead rowSpan={2} className="px-1 py-0.5 border border-black print:h-6">
@@ -977,7 +977,7 @@ export const PriceKgUpdate = () => {
                 <TableBody>
                   {spBrands.map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell className="px-1 py-0.5 border border-black font-medium">{b.name}</TableCell>
+                      <TableCell className="w-[21%] truncate px-1 py-0.5 border border-black font-medium">{b.name}</TableCell>
                       {spTypes.flatMap((t) => {
                         const key = cellKey(sp, b.id, t.id);
                         const raw = (cells[key] ?? "").trim();
