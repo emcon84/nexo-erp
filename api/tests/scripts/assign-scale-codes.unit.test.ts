@@ -3,6 +3,7 @@ import {
   parentBrandOf,
   type CellLike,
 } from "../../scripts/assign-scale-codes";
+import { planMissingScaleCodes, CODE_MIN } from "../../src/services/scaleCodeService";
 
 const cell = (over: Partial<CellLike> = {}): CellLike => ({
   id: "c1",
@@ -66,6 +67,68 @@ describe("planScaleCodes — códigos corridos de 3 dígitos dentro del límite"
     expect(plan[898].scaleCode).toBe("999"); // último código dentro del rango (101..999)
     expect(plan[899].scaleCode).toBe("0000"); // se desborda
     expect(plan.filter((p) => p.scaleCode === "0000")).toHaveLength(3000 - 899);
+  });
+});
+
+describe("planMissingScaleCodes — fill-only, no destructivo", () => {
+  it("asigna SOLO las celdas sin código, arrancando en max-usado+1, sin tocar las existentes", () => {
+    const plan = planMissingScaleCodes([
+      { id: "a", scaleCode: "101" },
+      { id: "b", scaleCode: null },
+      { id: "c", scaleCode: "102" },
+      { id: "d", scaleCode: "" },
+    ]);
+    // max usado = 102 → next = 103; las celdas "a" y "c" NO se tocan.
+    expect(plan).toEqual([
+      { id: "b", scaleCode: "103" },
+      { id: "d", scaleCode: "104" },
+    ]);
+  });
+
+  it("arranca en 101 cuando no hay códigos usados", () => {
+    const plan = planMissingScaleCodes([
+      { id: "x", scaleCode: null },
+      { id: "y", scaleCode: null },
+    ]);
+    expect(plan.map((p) => p.id)).toEqual(["x", "y"]);
+    expect(plan.map((p) => p.scaleCode)).toEqual(["101", "102"]);
+  });
+
+  it("trata whitespace como vacío (es una celda a completar, no un código usado)", () => {
+    const plan = planMissingScaleCodes([
+      { id: "a", scaleCode: "  " },
+      { id: "b", scaleCode: null },
+    ]);
+    expect(plan).toEqual([
+      { id: "a", scaleCode: "101" },
+      { id: "b", scaleCode: "102" },
+    ]);
+  });
+
+  it("ignora códigos no numéricos al calcular 'usados' (no bloquean el rango)", () => {
+    const plan = planMissingScaleCodes([
+      { id: "a", scaleCode: "ABC" },
+      { id: "b", scaleCode: null },
+    ]);
+    // "ABC" es un código ya presente (no se toca) pero no ocupa número.
+    expect(plan).toEqual([{ id: "b", scaleCode: "101" }]);
+  });
+
+  it("no inventa códigos cuando el rango 101..999 se agota (deja null)", () => {
+    const cells = [];
+    for (let i = 0; i < 899; i++) {
+      cells.push({ id: `u${i}`, scaleCode: String(CODE_MIN + i) });
+    }
+    cells.push({ id: "extra", scaleCode: null });
+    expect(planMissingScaleCodes(cells)).toEqual([]);
+  });
+
+  it("devuelve vacío si no hay celdas sin código", () => {
+    const plan = planMissingScaleCodes([
+      { id: "a", scaleCode: "101" },
+      { id: "b", scaleCode: "102" },
+    ]);
+    expect(plan).toEqual([]);
   });
 });
 

@@ -179,6 +179,9 @@ export const PriceKgUpdate = () => {
 
   // --- Planilla (matriz marca × tipo → precio) ---
   const [cells, setCells] = useState<Record<string, string>>({});
+  // Código de balanza (scaleCode) por celda (mismo cellKey que `cells`).
+  // Solo lectura: el auto-asignado lo hace el backend al guardar; acá se muestra.
+  const [cellCodes, setCellCodes] = useState<Record<string, string | null>>({});
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [savingPlan, setSavingPlan] = useState(false);
   const [downloadingCsv, setDownloadingCsv] = useState(false);
@@ -212,13 +215,18 @@ export const PriceKgUpdate = () => {
     try {
       const data = await getPriceKgPlan();
       const map: Record<string, string> = {};
+      const codes: Record<string, string | null> = {};
       for (const c of data) {
-        map[cellKey(c.species, c.brandId, c.typeId)] = String(c.priceKg);
+        const key = cellKey(c.species, c.brandId, c.typeId);
+        map[key] = String(c.priceKg);
+        codes[key] = c.scaleCode ?? null;
       }
       setCells(map);
+      setCellCodes(codes);
       baselineRef.current = { ...map };
     } catch {
       setCells({});
+      setCellCodes({});
       baselineRef.current = {};
     } finally {
       setLoadingPlan(false);
@@ -877,19 +885,29 @@ export const PriceKgUpdate = () => {
                       <TableCell className="whitespace-nowrap p-2 font-medium">
                         {b.name}
                       </TableCell>
-                      {visibleTypes.map((t) => (
-                        <TableCell key={t.id} className="p-1.5">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className="h-8 w-20 px-2 text-right text-sm"
-                            aria-label={`${b.name} ${t.name}`}
-                            value={cells[cellKey(activeSpecies, b.id, t.id)] ?? ""}
-                            onChange={(e) => setCell(b.id, t.id, e.target.value)}
-                          />
-                        </TableCell>
-                      ))}
+                      {visibleTypes.map((t) => {
+                        const code = cellCodes[cellKey(activeSpecies, b.id, t.id)];
+                        return (
+                          <TableCell key={t.id} className="p-1.5">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              className="h-8 w-20 px-2 text-right text-sm"
+                              aria-label={`${b.name} ${t.name}`}
+                              value={cells[cellKey(activeSpecies, b.id, t.id)] ?? ""}
+                              onChange={(e) => setCell(b.id, t.id, e.target.value)}
+                            />
+                            <div
+                              className="mt-1 text-center font-mono text-xs text-muted-foreground"
+                              aria-label={`${b.name} ${t.name} código balanza`}
+                              title="Código balanza (auto-asignado)"
+                            >
+                              {code ?? "—"}
+                            </div>
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))}
                 </TableBody>

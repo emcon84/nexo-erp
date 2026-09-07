@@ -6,6 +6,7 @@ import {
   buildRow,
   formatPrice,
 } from "../utils/scaleCsv";
+import { assignMissingScaleCodes } from "../services/scaleCodeService";
 
 /**
  * Planilla "Precios por kilo": matriz marca (filas) × tipo (columnas) →
@@ -138,6 +139,12 @@ export const savePriceKgPlan = async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Fill-only: las celdas recién creadas (scaleCode null) reciben el siguiente
+    // código disponible; las que ya tienen código NO se tocan. Corre fuera del
+    // $transaction anterior (ver nota de scope arriba): con `prisma` (extendido)
+    // el scope org lo inyecta la extensión y además pasamos organizationId explícito.
+    await assignMissingScaleCodes(prisma, organizationId);
 
     return res.status(200).json({ saved: entries.length });
   } catch (error: any) {

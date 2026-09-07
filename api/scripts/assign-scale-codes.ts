@@ -21,13 +21,26 @@
  * cargado" de la planilla). Idempotente.
  *
  * Env/flag:
- *   ORG_SLUG = slug de la organización (default el-almacen-de-las-mascotas)
- *   --apply  = escribe en la BD (sin --apply = dry-run)
+ *   ORG_SLUG   = slug de la organización (default el-almacen-de-las-mascotas)
+ *   --apply    = escribe en la BD (sin --apply = dry-run)
+ *   --renumber = reasigna TODAS las celdas de forma determinista (COMPORTAMIENTO
+ *                LEGACY, DESTRUCTIVO: renumera códigos existentes)
  *
- * Usage: npx ts-node scripts/assign-scale-codes.ts [--apply]
+ * DEFAULT (sin --renumber) = FILL-ONLY / NON-DESTRUCTIVE: asigna el siguiente
+ * código disponible (101..999) SOLO a las celdas que están sin scaleCode
+ * (null/vacío). Las celdas que ya tienen código quedan INTACTAS. Se apoya en
+ * `assignMissingScaleCodes` (services/scaleCodeService) y en su helper puro
+ * `planMissingScaleCodes` para el dry-run.
+ *
+ * Usage: npx ts-node scripts/assign-scale-codes.ts [--apply] [--renumber]
  */
 import "dotenv/config";
 import { basePrisma } from "../src/config/db";
+import {
+  assignMissingScaleCodes,
+  planMissingScaleCodes,
+  type ScaleCodeCell,
+} from "../src/services/scaleCodeService";
 
 const DEFAULT_ORG_SLUG = "el-almacen-de-las-mascotas";
 
@@ -39,8 +52,34 @@ const SCALE_CODE_LIMIT = 899; // cantidad de códigos disponibles (101..999)
 export const hasApplyFlag = (argv: string[] = process.argv): boolean =>
   argv.includes("--apply");
 
+export const hasRenumberFlag = (argv: string[] = process.argv): boolean =>
+  argv.includes("--renumber");
+
 export const resolveOrgSlug = (env: NodeJS.ProcessEnv = process.env): string =>
   env.ORG_SLUG || DEFAULT_ORG_SLUG;
+
+/**
+ * Orden determinista para el fill-only: marca → tipo → especie
+ * (localeCompare 'es', sensitivity base). Mismo criterio que el servicio.
+ */
+const sortCellsForFill = (cells: any[], brandById: Map<string, string>, typeById: Map<string, string>) =>
+  cells
+    .slice()
+    .sort((a: any, b: any) => {
+      const byBrand = (brandById.get(a.brandId) ?? "").localeCompare(
+        brandById.get(b.brandId) ?? "",
+        "es",
+        { sensitivity: "base" },
+      );
+      if (byBrand !== 0) return byBrand;
+      const byType = (typeById.get(a.typeId) ?? "").localeCompare(
+        typeById.get(b.typeId) ?? "",
+        "es",
+        { sensitivity: "base" },
+      );
+      if (byType !== 0) return byType;
+      return a.species.localeCompare(b.species, "es", { sensitivity: "base" });
+    });
 
 // Tokens de variante/línea (no la marca madre) que se descartan al derivar la
 // familia. IMPORTANTE: "ROYAL" NO se descarta ("ROYAL CANIN" es la marca madre).
@@ -113,6 +152,7 @@ export const planScaleCodes = (cells: CellLike[]): PlannedCode[] => {
 
 async function main() {
   const apply = hasApplyFlag();
+  const renumber = hasRenumberFlag();
   const slug = resolveOrgSlug();
 
   const org = await basePrisma.organization.findFirst({ where: { slug } });
@@ -123,54 +163,96 @@ async function main() {
     basePrisma.priceKgType.findMany({ where: { organizationId: org.id }, select: { id: true, name: true } }),
     basePrisma.priceKgPrice.findMany({
       where: { organizationId: org.id, priceKg: { gt: 0 } },
-      select: { id: true, brandId: true, typeId: true, species: true, priceKg: true },
+      select: { id: true, brandId: true, typeId: true, species: true, priceKg: true, scaleCode: true },
     }),
   ]);
 
   const brandById = new Map(brands.map((b) => [b.id, b.name]));
   const typeById = new Map(types.map((t) => [t.id, t.name]));
 
-  const cellLikes: CellLike[] = [];
-  for (const c of cells) {
-    const brandName = brandById.get(c.brandId) ?? "";
-    if (!brandName) continue;
-    cellLikes.push({
-      id: c.id,
-      brandId: c.brandId,
-      brandName,
-      parentBrand: parentBrandOf(brandName),
-      typeName: typeById.get(c.typeId) ?? "",
-      species: c.species,
-      priceKg: c.priceKg,
-    });
+  // ── --renumber: reasignación TOTAL determinista (comportamiento LEGACY,
+  //    destructivo: renumera TODO desde 101). Esto es lo que el default ya NO
+  //    hace — es el escape hatch explícito si alguna vez hace falta renumberear.
+  if (renumber) {
+    const cellLikes: CellLike[] = [];
+    for (const c of cells) {
+      const brandName = brandById.get(c.brandId) ?? "";
+      if (!brandName) continue;
+      cellLikes.push({
+        id: c.id,
+        brandId: c.brandId,
+        brandName,
+        parentBrand: parentBrandOf(brandName),
+        typeName: typeById.get(c.typeId) ?? "",
+        species: c.species,
+        priceKg: c.priceKg,
+      });
+    }
+
+    const plan = planScaleCodes(cellLikes);
+
+    if (apply) {
+      let updated = 0;
+      await basePrisma.$transaction(async (tx) => {
+        for (const row of plan) {
+          const res = await tx.priceKgPrice.updateMany({
+            where: { id: row.priceKgPriceId, organizationId: org.id },
+            data: { scaleCode: row.scaleCode },
+          });
+          updated += res.count;
+        }
+      });
+      console.log(`[--renumber] [${org.name}] ${updated} celdas actualizadas con scaleCode.`);
+    } else {
+      console.log(`DRY-RUN --renumber [${org.name}] — sin --apply no se escribe nada.\n`);
+      console.log(`Set: ${cellLikes.length} celdas con precio cargado.\n`);
+      const byParent = new Map<string, { code: string; type: string; species: string }[]>();
+      for (const row of plan) {
+        const arr = byParent.get(row.parentBrand) ?? [];
+        arr.push({ code: row.scaleCode, type: row.typeName, species: row.species });
+        byParent.set(row.parentBrand, arr);
+      }
+      for (const [parent, items] of byParent) {
+        console.log(`  ${parent}: ${items.map((i) => `${i.code}=${i.type} ${i.species}`).join(", ")}`);
+      }
+    }
+    return;
   }
 
-  const plan = planScaleCodes(cellLikes);
+  // ── DEFAULT (fill-only, non-destructive): asigna el siguiente código libre
+  //    SOLO a las celdas sin scaleCode. Las celdas con código ya asignado no se
+  //    tocan (nunca se renumera). Reutiliza assignMissingScaleCodes (--apply) y
+  //    su helper puro planMissingScaleCodes (dry-run).
+  const fillCells: ScaleCodeCell[] = sortCellsForFill(cells, brandById, typeById).map(
+    (c: any) => ({ id: c.id, scaleCode: c.scaleCode ?? null }),
+  );
+  const missingCount = fillCells.filter(
+    (c) => !c.scaleCode || c.scaleCode.trim() === "",
+  ).length;
 
   if (apply) {
-    let updated = 0;
-    await basePrisma.$transaction(async (tx) => {
-      for (const row of plan) {
-        const res = await tx.priceKgPrice.updateMany({
-          where: { id: row.priceKgPriceId, organizationId: org.id },
-          data: { scaleCode: row.scaleCode },
-        });
-        updated += res.count;
-      }
-    });
-    console.log(`[${org.name}] ${updated} celdas actualizadas con scaleCode.`);
-  } else {
-    console.log(`DRY-RUN [${org.name}] — sin --apply no se escribe nada.\n`);
-    console.log(`Set: ${cellLikes.length} celdas con precio cargado.\n`);
-    const byParent = new Map<string, { code: string; type: string; species: string }[]>();
-    for (const row of plan) {
-      const arr = byParent.get(row.parentBrand) ?? [];
-      arr.push({ code: row.scaleCode, type: row.typeName, species: row.species });
-      byParent.set(row.parentBrand, arr);
-    }
-    for (const [parent, items] of byParent) {
-      console.log(`  ${parent}: ${items.map((i) => `${i.code}=${i.type} ${i.species}`).join(", ")}`);
-    }
+    const { assigned } = await assignMissingScaleCodes(basePrisma, org.id);
+    console.log(
+      `[${org.name}] ${assigned} celdas sin código recibieron scaleCode (el resto quedó intacto).`,
+    );
+    return;
+  }
+
+  console.log(`DRY-RUN [${org.name}] — sin --apply no se escribe nada. (DEFAULT fill-only; --renumber reasigna todo)`);
+  if (missingCount === 0) {
+    console.log("Todas las celdas ya tienen scaleCode: nada para asignar.");
+    return;
+  }
+  const plan = planMissingScaleCodes(fillCells);
+  console.log(`${plan.length} celda(s) sin código → next-available (101..999):\n`);
+  for (const row of plan) {
+    const c = cells.find((x: any) => x.id === row.id);
+    const brandName = brandById.get(c?.brandId ?? "") ?? "";
+    const typeName = typeById.get(c?.typeId ?? "") ?? "";
+    console.log(`  ${brandName} · ${typeName} (${c?.species}) → ${row.scaleCode}`);
+  }
+  if (plan.length < missingCount) {
+    console.log("\n(El rango 101..999 se agotó: las celdas restantes quedan sin código.)");
   }
 }
 
