@@ -91,6 +91,9 @@ export const StockScannerPage = () => {
   // Asignar/editar precio por kg directo desde el scanner (PUT priceKgSuelto).
   const [kgEditOpen, setKgEditOpen] = useState(false);
   const [kgInput, setKgInput] = useState("");
+  // Editar el PRECIO del producto (normal) directo desde el scanner (PUT price).
+  const [priceEditOpen, setPriceEditOpen] = useState(false);
+  const [priceInput, setPriceInput] = useState("");
   const lastScannedRef = useRef("");
 
   // Assignment panel
@@ -123,6 +126,9 @@ export const StockScannerPage = () => {
     }
   })();
   const userRole = currentUser?.role as Role | undefined;
+  // Solo admin/gestión pueden editar el precio del producto desde el scanner.
+  const canEditPrice =
+    userRole === "ADMIN" || userRole === "MANAGEMENT" || userRole === "SUPERADMIN";
   const userBranchIds = currentUser?.branchIds as string[] | undefined;
 
   const mode = resolveScannerBranchMode(userRole, userBranchIds);
@@ -537,6 +543,36 @@ export const StockScannerPage = () => {
     setLoading(false);
   };
 
+  // Edita el PRECIO del producto escaneado (PUT /products/:id con price).
+  const savePrice = async () => {
+    if (!product) return;
+    const n = parseFloat(priceInput.trim().replace(",", "."));
+    if (Number.isNaN(n) || n < 0) {
+      toast.error("Ingresá un precio válido");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/products/${product.id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ price: n }),
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        setProduct(data);
+        setPriceEditOpen(false);
+        playBeep();
+        toast.success(`Precio actualizado: ${formatCurrency(n)}`);
+      } else {
+        toast.error(data.message || "Error al actualizar el precio");
+      }
+    } catch {
+      toast.error("Error de conexión — se necesita internet para actualizar el precio");
+    }
+    setLoading(false);
+  };
+
   const resetAndScan = () => {
     setProduct(null);
     setAssignOpen(false);
@@ -656,6 +692,18 @@ export const StockScannerPage = () => {
             ) : (
               <span className="text-xs text-muted-foreground">sin precio por kg</span>
             )}
+            {canEditPrice && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5"
+                onClick={() => {
+                  setPriceInput(String(product.price));
+                  setPriceEditOpen(true);
+                }}
+              >
+                Editar precio
+              </button>
+            )}
             <button
               type="button"
               className="ml-auto inline-flex items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5"
@@ -680,6 +728,21 @@ export const StockScannerPage = () => {
               />
               <Button size="sm" onClick={() => void saveKgPrice()}>Guardar</Button>
               <Button size="sm" variant="ghost" onClick={() => setKgEditOpen(false)}>Cancelar</Button>
+            </div>
+          )}
+
+          {priceEditOpen && (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                inputMode="decimal"
+                placeholder="Precio ($)"
+                value={priceInput}
+                onChange={(e) => setPriceInput(e.target.value)}
+                className="h-9"
+              />
+              <Button size="sm" onClick={() => void savePrice()}>Guardar</Button>
+              <Button size="sm" variant="ghost" onClick={() => setPriceEditOpen(false)}>Cancelar</Button>
             </div>
           )}
 
