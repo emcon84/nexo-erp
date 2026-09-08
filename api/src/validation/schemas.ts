@@ -158,8 +158,9 @@ export const createProductSchema = z.object({
   variantOptionIds: z.array(z.string().uuid()).optional(),
   // Venta suelta (sdd/venta-alimento-suelto B-01/A-02): opcionales en el alta.
   // No hay recompute en create (regla de staleness B-05) — pesan en el PUT.
-  weightKg: z.coerce.number().positive("El peso debe ser mayor a 0").multipleOf(0.01).optional(),
-  bulkFactor: z.coerce.number().positive("El factor debe ser mayor a 0").multipleOf(0.01).optional(),
+  // nullable: el drawer envía null cuando el operador los deja vacíos.
+  weightKg: z.coerce.number().positive("El peso debe ser mayor a 0").multipleOf(0.01).nullable().optional(),
+  bulkFactor: z.coerce.number().positive("El factor debe ser mayor a 0").multipleOf(0.01).nullable().optional(),
   // Multi-pack por unidad (sdd/venta-por-unidad-multpack): cuántas unidades
   // vienen por caja. Entero ≥ 0, opcional en el alta (ausente = box-only).
   // Por convención un pack tiene >= 1 unidad; la elegibilidad para venta
