@@ -200,7 +200,8 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
     let lastKeyAt = 0;
     const onKey = (e: KeyboardEvent) => {
       const now = Date.now();
-      if (now - lastKeyAt > 400) buffer = "";
+      const gap = now - lastKeyAt;
+      if (gap > 400) buffer = "";
       lastKeyAt = now;
 
       if (e.key === "Enter") {
@@ -214,6 +215,15 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
         return;
       }
       if (/^\d$/.test(e.key)) {
+        // La pistola manda los dígitos en ráfaga muy rápida (<60ms). Si ya hay
+        // buffer (escaneo en curso) y el dígito llega en ráfaga, lo prevenimos
+        // para que NO se escriba en el input enfocado (buscador) y no se mezcle
+        // con lo que el operador tipea. El tipeo humano (más lento, >100ms) no
+        // se intercepta.
+        if (buffer.length > 0 && gap < 60) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         buffer += e.key;
       } else {
         buffer = "";
