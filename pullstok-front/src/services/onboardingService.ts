@@ -30,6 +30,9 @@ export interface Organization {
   plan?: Plan;
   paidUntil?: string | null;
   isActive?: boolean;
+  // Módulos habilitados por negocio (sdd/modulos-por-negocio): el backend los
+  // incluye en getMe (login y /auth/me). Array vacío = "no configurado".
+  enabledModules?: string[];
 }
 
 export interface Me {

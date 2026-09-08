@@ -80,6 +80,10 @@ model Organization {
   // Inicio de Actividades se muestran debajo del CUIT en el comprobante ARCA).
   ingresosBrutos        String?
   inicioActividades     String?
+  // Módulos habilitados por negocio (sdd/modulos-por-negocio). Array vacío =
+  // "no configurado" → el front cae al comportamiento legacy por plan + suelto
+  // condicional (ver resolveEffectiveModules en config/planLimits.ts).
+  enabledModules        String[]    @default([])
   users                 User[]
   products              Product[]
   providers             Provider[]

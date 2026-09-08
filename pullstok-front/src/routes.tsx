@@ -130,6 +130,12 @@ const BusinessHoursSettings = lazy(() =>
   })),
 );
 
+const ModulesSettings = lazy(() =>
+  import("./views/ModulesSettings").then((m) => ({
+    default: m.ModulesSettings,
+  })),
+);
+
 const PricingSettings = lazy(() =>
   import("./views/PricingSettings").then((m) => ({
     default: m.PricingSettings,
@@ -302,6 +308,7 @@ const AppRoutes = () => (
         <Route path="/planilla-mayorista/importar" element={<PriceListImport />} />
         <Route path="/planilla-mayorista/:id" element={<PriceListDetail />} />
         <Route path="/ajustes" element={<BrandingSettings />} />
+        <Route path="/ajustes/modulos" element={<ModulesSettings />} />
         <Route path="/ajustes/horarios" element={<BusinessHoursSettings />} />
         <Route path="/configuracion-precios" element={<PricingSettings />} />
       </Route>

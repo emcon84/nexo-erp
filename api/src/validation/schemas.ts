@@ -1191,3 +1191,13 @@ export const arcaSettingsSchema = z
     enabled: z.boolean().default(false),
   })
   .strip();
+
+// ---------- Módulos por negocio (sdd/modulos-por-negocio) ----------
+// Body del PUT /api/modules: la lista de keys de módulos habilitados para la
+// org. El controller valida contra MODULE_REGISTRY y el plan (rechaza keys
+// desconocidas y por encima del plan). .strict() descarta campos desconocidos.
+export const updateModulesSchema = z
+  .object({
+    modules: z.array(z.string(), "modules debe ser un array de strings"),
+  })
+  .strict();

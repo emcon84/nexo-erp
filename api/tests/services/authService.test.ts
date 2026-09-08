@@ -117,8 +117,24 @@ describe('AuthService', () => {
           mustChangePassword: false,
           branchIds: ['b-1', 'b-2'],
           plan: null,
+          enabledModules: [],
         },
       });
+    });
+
+    it('incluye enabledModules de la organización en el payload del usuario', async () => {
+      mockedPrisma.user.findFirst.mockResolvedValue({
+        ...baseUser,
+        organization: { isActive: true, enabledModules: ['stock', 'ventas'] },
+      });
+      mockedPrisma.branchAssignment.findMany.mockResolvedValue([]);
+      mockedBcrypt.compare.mockResolvedValue(true);
+      mockedGenAccess.mockReturnValue('access-token');
+      mockedGenRefresh.mockReturnValue('refresh-token');
+
+      const result = await AuthService.login('test@example.com', 'password123');
+
+      expect(result.user.enabledModules).toEqual(['stock', 'ventas']);
     });
 
     it('lanza "Credenciales inválidas" si el usuario no existe', async () => {

@@ -72,6 +72,10 @@ class AuthService {
         // un plan cacheado en el token se desincroniza si el admin lo cambia
         // sin forzar relogin; el backend siempre revalida con query propia.
         plan: user.organization?.plan ?? null,
+        // Módulos habilitados por negocio (sdd/modulos-por-negocio): el front
+        // los usa para armar el sidebar sin pegarle a GET /api/modules en cada
+        // login. Array vacío = "no configurado" → fallback legacy por plan.
+        enabledModules: user.organization?.enabledModules ?? [],
       },
     };
   }
@@ -219,6 +223,7 @@ class AuthService {
             address: true,
             ingresosBrutos: true,
             inicioActividades: true,
+            enabledModules: true,
           },
         },
       },

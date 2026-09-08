@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LogOut,
@@ -12,12 +12,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { logout } from "../../../controllers/authController";
-import { navGroups, vendorSimpleNav, filterNavItemsByPlan } from "./navItems";
+import { navGroups, vendorSimpleNav, filterNavItemsByModules, resolveEffectiveModules } from "./navItems";
 import { filterNavItemsByRole } from "@/constants/rolePermissions";
 import { usePendingOrdersCount } from "../../hooks/useOrder";
 import { useUnreadMessagesCount } from "../../hooks/useChat";
 import { useTheme } from "@/hooks/useTheme";
 import { useBrandingContext } from "@/contexts/BrandingContext";
+import { useOrgModulesContext } from "@/contexts/OrgModulesContext";
 import { BrandLogo } from "@/components/atoms/BrandLogo";
 import { InstallButton } from "@/components/atoms/InstallButton";
 import { RefreshDataButton } from "@/components/atoms/RefreshDataButton";
@@ -52,16 +53,25 @@ export const SidebarContent = ({
   })();
 
   // En modo colapsado el menú se aplana a iconos (sin grupos): se listan los
-  // ítems visibles según rol/plan. VENDEDOR usa el menú plano simple; el resto
-  // aplana los acordeones PRODUCTOS/VENTAS/etc. a una sola lista (todos los
-  // ítems son links directos, sin sub-ítems).
-  const plan = user?.plan;
+  // ítems visibles según rol/módulos. VENDEDOR usa el menú plano simple; el
+  // resto aplana los acordeones a una sola lista.
+  const { enabledModules, plan: modulesPlan, hasPriceKg } = useOrgModulesContext();
   const role = user?.role;
+  // Plan: preferir el contexto (GET /api/modules); fallback a localStorage
+  // (user.plan) para no dejar el sidebar vacío mientras la config carga.
+  const plan = modulesPlan ?? user?.plan;
+  // Módulos efectivos memoizados: los deps son estables (enabledModules del
+  // contexto es una ref estable, plan/hasPriceKg primitivos), así la ref de
+  // effectiveModules no cambia entre renders (evita loops del useEffect).
+  const effectiveModules = useMemo(
+    () => resolveEffectiveModules(enabledModules, plan, hasPriceKg),
+    [enabledModules, plan, hasPriceKg],
+  );
   const flatItems: NavItem[] =
     role === "VENDEDOR"
       ? vendorSimpleNav
       : navGroups.flatMap((g) =>
-          filterNavItemsByRole(filterNavItemsByPlan(g.items, plan), role),
+          filterNavItemsByRole(filterNavItemsByModules(g.items, effectiveModules), role),
         );
 
   // Auto-open group containing the current route
@@ -69,7 +79,7 @@ export const SidebarContent = ({
     const currentPath = location.pathname;
     for (const group of navGroups) {
       const visibleItems = filterNavItemsByRole(
-        filterNavItemsByPlan(group.items, user?.plan),
+        filterNavItemsByModules(group.items, effectiveModules),
         user?.role,
       );
       if (visibleItems.some((item) => currentPath === item.to || currentPath.startsWith(item.to + "/"))) {
@@ -77,9 +87,9 @@ export const SidebarContent = ({
         break;
       }
     }
-    // user?.plan / user?.role vienen de localStorage como primitivos estables:
-    // el effect solo se re-ejecuta si cambian (o al navegar).
-  }, [location.pathname, user?.plan, user?.role]);
+    // effectiveModules / user?.role son estables entre renders: el effect solo
+    // se re-ejecuta si cambian (o al navegar).
+  }, [location.pathname, user?.role, effectiveModules]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) => {
@@ -233,7 +243,7 @@ export const SidebarContent = ({
         ) : (
           navGroups.map((group) => {
             const visibleItems = filterNavItemsByRole(
-              filterNavItemsByPlan(group.items, user?.plan),
+              filterNavItemsByModules(group.items, effectiveModules),
               user?.role,
             );
             if (visibleItems.length === 0) return null;

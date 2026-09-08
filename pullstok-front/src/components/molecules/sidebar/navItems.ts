@@ -51,12 +51,12 @@ export const navGroups: NavGroup[] = [
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/categorias", label: "Categorías", icon: Tags, visibleRoles: ["ADMIN", "MANAGEMENT"] },
-      { to: "/actualizar-precios", label: "Actualizar precios", icon: DollarSign, visibleRoles: ["ADMIN", "SUPERADMIN"] },
-      { to: "/precios-por-kilo", label: "Precios por kilo", icon: Scale, visibleRoles: ["ADMIN", "SUPERADMIN"] },
-      { to: "/consultar-precios", label: "Venta suelta", icon: Search, visibleRoles: ["ADMIN", "MANAGEMENT", "VENDEDOR", "CASHIER"] },
-      { to: "/revision-precios-kg", label: "Revisión precios kg", icon: ClipboardCheck, visibleRoles: ["ADMIN"] },
-      { to: "/stock-suelto", label: "Stock suelto", icon: PackageOpen, visibleRoles: ["ADMIN", "MANAGEMENT"] },
-      { to: "/planilla-mayorista", label: "Planilla mayorista", icon: FileSpreadsheet, visibleRoles: ["ADMIN", "SUPERADMIN"] },
+      { to: "/actualizar-precios", label: "Actualizar precios", icon: DollarSign, moduleKey: "suelto", visibleRoles: ["ADMIN", "SUPERADMIN"] },
+      { to: "/precios-por-kilo", label: "Precios por kilo", icon: Scale, moduleKey: "suelto", visibleRoles: ["ADMIN", "SUPERADMIN"] },
+      { to: "/consultar-precios", label: "Venta suelta", icon: Search, moduleKey: "suelto", visibleRoles: ["ADMIN", "MANAGEMENT", "VENDEDOR", "CASHIER"] },
+      { to: "/revision-precios-kg", label: "Revisión precios kg", icon: ClipboardCheck, moduleKey: "suelto", visibleRoles: ["ADMIN"] },
+      { to: "/stock-suelto", label: "Stock suelto", icon: PackageOpen, moduleKey: "suelto", visibleRoles: ["ADMIN", "MANAGEMENT"] },
+      { to: "/planilla-mayorista", label: "Planilla mayorista", icon: FileSpreadsheet, moduleKey: "suelto", visibleRoles: ["ADMIN", "SUPERADMIN"] },
     ],
   },
   {
@@ -87,6 +87,7 @@ export const navGroups: NavGroup[] = [
       { to: "/usuarios", label: "Usuarios", icon: UserPlus, visibleRoles: ["ADMIN", "MANAGEMENT"] },
       { to: "/sucursales", label: "Sucursales", icon: Building, visibleRoles: ["ADMIN", "MANAGEMENT"] },
       { to: "/ajustes", label: "Ajustes", icon: Palette, moduleKey: "branding", visibleRoles: ["ADMIN"] },
+      { to: "/ajustes/modulos", label: "Módulos", icon: Settings, visibleRoles: ["ADMIN"] },
       { to: "/ajustes/horarios", label: "Horario comercial", icon: Clock, visibleRoles: ["ADMIN"] },
       { to: "/configuracion-precios", label: "Configuración de precios", icon: Scale, moduleKey: "pricing", visibleRoles: ["ADMIN", "MANAGEMENT"] },
       { to: "/mensajes", label: "Mensajes", icon: MessageSquare, visibleRoles: ["ADMIN", "MANAGEMENT"] },
@@ -128,5 +129,38 @@ export function filterNavItemsByPlan(
     if (!item.moduleKey) return true;
     const modules = plan ? PLAN_LIMITS[plan]?.modules : undefined;
     return !!modules?.includes(item.moduleKey);
+  });
+}
+
+/**
+ * Resuelve los módulos efectivos de una org (sdd/modulos-por-negocio).
+ * - Si la org tiene config explícita (enabledModules no vacío) → esa lista gana.
+ * - Si no (legacy) → defaults del plan, y agrega `suelto` solo si la org tiene
+ *   celdas de precio por kilo (hasPriceKg).
+ * Pura: la usa el sidebar y el OrgModulesContext.
+ */
+export function resolveEffectiveModules(
+  enabledModules: string[],
+  plan: Plan | null | undefined,
+  hasPriceKg: boolean,
+): string[] {
+  if (enabledModules.length > 0) return enabledModules;
+  const base = plan ? PLAN_LIMITS[plan]?.modules ?? [] : [];
+  if (hasPriceKg && !base.includes("suelto")) return [...base, "suelto"];
+  return base;
+}
+
+/**
+ * Filtra ítems de navegación por los módulos efectivos. Un ítem se muestra si
+ * no tiene moduleKey (siempre visible) o si su moduleKey está en la lista.
+ * Se compone con filterNavItemsByRole para armar el menú final.
+ */
+export function filterNavItemsByModules(
+  items: NavItem[],
+  effectiveModules: string[],
+): NavItem[] {
+  return items.filter((item) => {
+    if (!item.moduleKey) return true;
+    return effectiveModules.includes(item.moduleKey);
   });
 }

@@ -7,6 +7,7 @@ import { getMe } from "../services/onboardingService";
 import { useOrdersRealtime } from "../components/hooks/useOrdersRealtime";
 import { useChatConversationsRealtime } from "../components/hooks/useChatRealtime";
 import { BrandingProvider } from "@/contexts/BrandingContext";
+import { OrgModulesProvider } from "@/contexts/OrgModulesContext";
 
 /**
  * Layout persistente para las rutas autenticadas. El MainLayout (sidebar) se
@@ -82,17 +83,19 @@ const ProtectedLayout = () => {
 
   return (
     <BrandingProvider>
-      <MainLayout>
-        <Suspense
-        fallback={
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <Loader />
-          </div>
-        }
-      >
-        <Outlet />
-      </Suspense>
-    </MainLayout>
+      <OrgModulesProvider>
+        <MainLayout>
+          <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <Loader />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </MainLayout>
+      </OrgModulesProvider>
     </BrandingProvider>
   );
 };
