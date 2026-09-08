@@ -78,7 +78,6 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
 
   // Loose-sale fields (sdd/venta-alimento-suelto A-02):
   const [weightKg, setWeightKg] = useState("");
-  const [bulkFactor, setBulkFactor] = useState("");
   // Multi-pack: unidades por caja (sdd/venta-por-unidad-multpack). Int, > 1
   // habilita la venta por unidad. Puede derivarse del nombre ("15x85grs").
   const [unitsPerBox, setUnitsPerBox] = useState("");
@@ -186,7 +185,6 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
         setImageUrl(product.image || "");
         setImageFile(null);
         setWeightKg(product.weightKg != null ? String(product.weightKg) : "");
-        setBulkFactor(product.bulkFactor != null ? String(product.bulkFactor) : "");
         setUnitsPerBox(product.unitsPerBox != null ? String(product.unitsPerBox) : "");
         setCarried(product.carried !== false); // default true si no viene
         // Pre-select variants if available
@@ -209,7 +207,6 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
         setImageUrl("");
         setImageFile(null);
         setWeightKg("");
-        setBulkFactor("");
         setUnitsPerBox("");
         setCarried(true);
         setVariants([]);
@@ -254,10 +251,11 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
       if (!isEdit) {
         payload.quantity = parseInt(quantity) || 0;
       }
-      // Loose-sale fields (A-02): weightKg always sent, bulkFactor optional (null = org default).
+      // Loose-sale fields (A-02): weightKg always sent, bulkFactor null = org default.
       payload.weightKg = !Number.isNaN(parsedWeightKg) && parsedWeightKg > 0 ? parsedWeightKg : null;
-      const parsedFactor = parseFloat(bulkFactor);
-      payload.bulkFactor = !isNaN(parsedFactor) && parsedFactor > 0 ? parsedFactor : null;
+      // El operador pone el precio por kilo manualmente, así que el factor
+      // mayorista siempre usa el default de la organización.
+      payload.bulkFactor = null;
       const parsedUnitsPerBox = parseInt(unitsPerBox, 10);
       payload.unitsPerBox =
         !isNaN(parsedUnitsPerBox) && parsedUnitsPerBox > 1 ? parsedUnitsPerBox : null;
@@ -341,7 +339,7 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
 
           {/* ── Venta suelta (sdd/venta-alimento-suelto A-02) ── */}
           {!readOnly && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="p-weightKg">Peso (kg)</Label>
               <Input
@@ -356,22 +354,6 @@ export const ProductDrawer = ({ open, onClose, product, onCreated, readOnly }: P
               />
               <p className="text-[11px] text-muted-foreground">
                 Peso del producto para calcular precio por kilo.
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p-bulkFactor">Factor mayorista propio</Label>
-              <Input
-                id="p-bulkFactor"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                value={bulkFactor}
-                onChange={(e) => setBulkFactor(e.target.value)}
-                placeholder="Usar el de la org"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Vacío = usa el factor de la organización.
               </p>
             </div>
           </div>
