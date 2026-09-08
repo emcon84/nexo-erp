@@ -210,6 +210,14 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
         if (code.length >= 6 && /^\d+$/.test(code)) {
           e.preventDefault();
           e.stopPropagation();
+          // El primer dígito de la ráfaga puede haberse escrito en el input
+          // enfocado (buscador) antes de que detectáramos el scan. Lo limpiamos
+          // para que no quede mezclado con lo que tipea el operador.
+          const active = document.activeElement as HTMLInputElement | null;
+          if (active && active.tagName === "INPUT" && active.type !== "number") {
+            active.value = "";
+            active.dispatchEvent(new Event("input", { bubbles: true }));
+          }
           void handleScan(code);
         }
         return;
