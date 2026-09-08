@@ -107,6 +107,13 @@ export function useVendorCatalog(branchId: string) {
     [],
   );
 
+  const clearSearch = () => {
+    setFilter("");
+    setCategoryFilter("");
+    setTitleFilter(null);
+    setSelectedIndex(-1);
+  };
+
   return {
     searchInputRef,
     itemRefs,
@@ -134,5 +141,6 @@ export function useVendorCatalog(branchId: string) {
     moveSelection,
     selectFirst,
     registerRow,
+    clearSearch,
   };
 }

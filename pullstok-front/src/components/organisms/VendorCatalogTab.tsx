@@ -35,7 +35,7 @@ interface VendorCatalogTabProps {
   /** Tecla T: cambia de tab (Por unidad ↔ Suelto). */
   onToggleTab?: () => void;
   /** Registra la función para volver al listado desde el panel (←). */
-  registerGridApi?: (api: { focusSelectedRow: () => void }) => void;
+  registerGridApi?: (api: { focusSelectedRow: () => void; clearSearch: () => void }) => void;
 }
 
 /**
@@ -223,8 +223,8 @@ export const VendorCatalogTab = ({
   }, [catalog.selectedIndex, catalog.items.length, catalog.setSelectedIndex]);
 
   useEffect(() => {
-    registerGridApi?.({ focusSelectedRow });
-  }, [focusSelectedRow, registerGridApi]);
+    registerGridApi?.({ focusSelectedRow, clearSearch: catalog.clearSearch });
+  }, [focusSelectedRow, registerGridApi, catalog.clearSearch]);
 
   const enabled = useCallback((index: number) => {
     const p = catalog.items[index];

@@ -81,7 +81,7 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
   // El listado (tab) y el panel se registran acá para saltar de zona con las
   // flechas: ↓ en la última fila → panel; ↑ en el primer control → listado.
   const panelApiRef = useRef<VendorOrderPanelApi | null>(null);
-  const gridApiRef = useRef<{ focusSelectedRow: () => void } | null>(null);
+  const gridApiRef = useRef<{ focusSelectedRow: () => void; clearSearch?: () => void } | null>(null);
 
   const focusPanelFirst = useCallback(() => {
     panelApiRef.current?.focusFirstControl();
@@ -92,7 +92,7 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
   }, []);
 
   const registerGridApi = useCallback(
-    (api: { focusSelectedRow: () => void }) => {
+    (api: { focusSelectedRow: () => void; clearSearch?: () => void }) => {
       gridApiRef.current = api;
     },
     [],
@@ -211,13 +211,8 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
           e.preventDefault();
           e.stopPropagation();
           // El primer dígito de la ráfaga puede haberse escrito en el input
-          // enfocado (buscador) antes de que detectáramos el scan. Lo limpiamos
-          // para que no quede mezclado con lo que tipea el operador.
-          const active = document.activeElement as HTMLInputElement | null;
-          if (active && active.tagName === "INPUT" && active.type !== "number") {
-            active.value = "";
-            active.dispatchEvent(new Event("input", { bubbles: true }));
-          }
+          // enfocado (buscador). Limpiamos el buscador para que no quede mezclado.
+          gridApiRef.current?.clearSearch?.();
           void handleScan(code);
         }
         return;
