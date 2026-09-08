@@ -414,7 +414,7 @@ export const StockScannerPage = () => {
         setProduct(assigned);
         setAssignOpen(false);
         lastScannedRef.current = "";
-        toast.success("¡Producto duplicado y código asignado!");
+        toast.success("¡Producto guardado y código asignado!");
         playBeep();
         stopScanner();
       } else {
@@ -918,6 +918,16 @@ export const StockScannerPage = () => {
                 </div>
               ))}
             </div>
+
+            {/* Crear producto nuevo desde cero (el barcode escaneado se asigna al crearlo) */}
+            <button
+              type="button"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 px-4 py-3 text-sm font-medium text-primary hover:bg-primary/5"
+              onClick={() => { setDupBarcode(notFoundCode); setDupProduct(null); setDupDrawerOpen(true); }}
+            >
+              <Plus className="h-4 w-4" />
+              Crear producto nuevo
+            </button>
           </div>
         </SheetContent>
       </Sheet>
