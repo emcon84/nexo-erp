@@ -675,6 +675,15 @@ export const bulkPriceUpdateSchema = z
       .min(-100, "Mínimo -100%")
       .max(500, "Máximo 500%")
       .optional(),
+    // margin (ganancia) GLOBAL, OPCIONAL y multiplicativo: el precio final =
+    // precio_base × (1 + margin/100) × (1 + percentage/100). La ganancia se
+    // aplica SIEMPRE (global), el % de aumento (percentage) puede variar por
+    // línea/categoría/producto y compone por encima. Sin margin → 0 (back-compat).
+    margin: z.coerce
+      .number()
+      .min(0, "Mínimo 0%")
+      .max(500, "Máximo 500%")
+      .optional(),
     categoryIds: z.array(z.string().uuid("Categoría inválida")).default([]),
     excludeProductIds: z.array(z.string().uuid("Producto inválido")).default([]),
     // Filtro por proveedor (sdd/alican-wholesale-price-list/providers): OPCIONAL.

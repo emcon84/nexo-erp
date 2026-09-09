@@ -446,6 +446,9 @@ export interface BulkPriceUpdatePayload {
   sectionPercentages?: { sectionId: string; percentage: number }[];
   /** Global opcional: sin valor el server resuelve 0 para productos sin override. */
   percentage?: number;
+  /** Ganancia global (multiplicativa): precio_final = precio × (1+margin/100) ×
+   * (1+percentage/100). OPCIONAL; sin valor el server resuelve 0. */
+  margin?: number;
   categoryPercentages: CategoryPriceOverride[];
   productPercentages: ProductPriceOverride[];
 }

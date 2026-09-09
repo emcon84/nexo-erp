@@ -107,6 +107,7 @@ export const BulkPriceUpdate = () => {
   const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [percentage, setPercentage] = useState("");
+  const [margin, setMargin] = useState("");
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
   const [categoryOverrides, setCategoryOverrides] = useState<
     Record<string, string>
@@ -283,6 +284,11 @@ export const BulkPriceUpdate = () => {
     const pct = trimmed === "" || Number.isNaN(parseFloat(trimmed))
       ? undefined
       : parseFloat(trimmed);
+    // Ganancia global opcional: vacío/NaN → undefined (server resuelve 0).
+    const marginTrimmed = margin.trim();
+    const marginVal = marginTrimmed === "" || Number.isNaN(parseFloat(marginTrimmed))
+      ? undefined
+      : parseFloat(marginTrimmed);
     const categoryPercentages = Object.entries(categoryOverrides)
       .filter(([, value]) => value.trim() !== "" && !Number.isNaN(parseFloat(value)))
       .map(([categoryId, value]) => ({ categoryId, percentage: parseFloat(value) }));
@@ -308,6 +314,7 @@ export const BulkPriceUpdate = () => {
       priceListSectionIds: selectedSectionIds,
       priceListTypes: selectedPriceListTypes,
       percentage: pct,
+      margin: marginVal,
       categoryPercentages,
       productPercentages,
       sectionPercentages,
@@ -320,6 +327,7 @@ export const BulkPriceUpdate = () => {
     selectedSectionIds,
     selectedPriceListTypes,
     percentage,
+    margin,
     categoryOverrides,
     productOverrides,
     sectionOverrides,
@@ -669,6 +677,28 @@ export const BulkPriceUpdate = () => {
                 <p className="text-xs text-muted-foreground">
                   0% = no cambia el precio pero cuenta en la corrida; destildar
                   = fuera de la corrida.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="margin">Ganancia (%)</Label>
+                <Input
+                  id="margin"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="500"
+                  placeholder="Ej: 30"
+                  value={margin}
+                  onChange={(e) => {
+                    setMargin(e.target.value);
+                    scopeChanged();
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Margen que se aplica multiplicativo sobre el precio base: precio
+                  × (1 + ganancia/100) × (1 + % de aumento/100). Se aplica SIEMPRE,
+                  incluso sin % de aumento.
                 </p>
               </div>
 

@@ -1171,9 +1171,11 @@ export const getProductByScan = async (req: Request, res: Response) => {
 export const BULK_UPDATE_MAX = 5000;
 const PREVIEW_PAGE_SIZE = 50;
 
-/** newPrice = price * (1 + pct/100), clamp ≥ 0, round 2 decimals. */
-export const computeNewPrice = (price: number, pct: number) =>
-  Math.max(0, Math.round(price * (1 + pct / 100) * 100) / 100);
+/** newPrice = price * (1 + margin/100) * (1 + pct/100), clamp ≥ 0, round 2.
+ * La ganancia (margin) se aplica SIEMPRE primero; el % de aumento (pct) compone
+ * por encima (multiplicativa). margin ausente = 0 (back-compat). */
+export const computeNewPrice = (price: number, pct: number, margin = 0) =>
+  Math.max(0, Math.round(price * (1 + margin / 100) * (1 + pct / 100) * 100) / 100);
 
 /**
  * Expande cada category node a SÍ MISMO + todos sus descendientes caminando la
@@ -1358,6 +1360,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
     const {
       brandValues,
       percentage,
+      margin,
       categoryIds = [],
       excludeProductIds = [],
       providerIds = [],
@@ -1369,6 +1372,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
     } = req.body as {
       brandValues: string[];
       percentage?: number;
+      margin?: number;
       categoryIds?: string[];
       excludeProductIds?: string[];
       providerIds?: string[];
@@ -1448,7 +1452,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
         categoryPercentages: catPctMap,
         globalPct,
       });
-      const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage));
+      const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage, margin ?? 0));
       return {
         id: p.id,
         name: p.name,
@@ -1522,7 +1526,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
           });
           return {
             id: r.id,
-            newPrice: roundBolsaPriceIfHigh(computeNewPrice(Number(r.price), effective)),
+            newPrice: roundBolsaPriceIfHigh(computeNewPrice(Number(r.price), effective, margin ?? 0)),
           };
         });
         await Promise.all(

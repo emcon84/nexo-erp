@@ -351,12 +351,14 @@ async function syncHqStockInline(
  * impresa muestra el ajuste). Sin ajuste (coincide o null) → se recalcula.
  */
 /**
- * Precio de venta a usar para product.price: el precio UNITARIO SIN IVA de la
- * planilla (lo que el negocio paga al proveedor). Fallback a Con IVA solo si la
- * planilla no trae Sin IVA (algunas filas de página 7 solo tienen Con IVA).
+ * Precio al público que se guarda en product.price al importar la planilla:
+ * el precio UNITARIO SIN IVA del proveedor + 21% (IVA). Ese es el precio base
+ * de venta al público; el BulkPriceUpdate luego aplica la ganancia y el % de
+ * aumento por encima. Fallback a Con IVA directo solo si la planilla no trae
+ * Sin IVA (algunas filas de página 7 solo tienen Con IVA).
  */
 const resolveSalePrice = (sinIva: number | null | undefined, conIva: number | null | undefined): number | null => {
-  if (sinIva != null) return round2(sinIva);
+  if (sinIva != null) return round2(sinIva * 1.21);
   if (conIva != null) return round2(conIva);
   return null;
 };
