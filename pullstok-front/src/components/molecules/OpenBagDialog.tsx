@@ -105,8 +105,9 @@ export const OpenBagDialog = ({
     setSubmitting(true);
     try {
       const result = await openBag(scannedProduct.id, selectedCellId);
+      const weightKg = scannedProduct.weightKg ?? 0;
       toast.success(
-        `Bolsa abierta: ${scannedProduct.name} → +${scannedProduct.weightKg.toFixed(2)} kg en ${cellOptions.find((c) => c.value === selectedCellId)?.label ?? result.priceKgPriceId}`,
+        `Bolsa abierta: ${scannedProduct.name} → +${weightKg.toFixed(2)} kg en ${cellOptions.find((c) => c.value === selectedCellId)?.label ?? result.priceKgPriceId}`,
       );
       onSuccess?.();
       onOpenChange(false);

@@ -86,14 +86,6 @@ function mockFetchWith(payload: unknown, status = 200) {
   );
 }
 
-// Simula el patrón de la pistola USB HID: un run de dígitos + Enter.
-function scanCode(code: string) {
-  for (const d of code.split("")) {
-    fireEvent.keyDown(window, { key: d });
-  }
-  fireEvent.keyDown(window, { key: "Enter" });
-}
-
 describe("UnifiedPos — Abrir bolsa integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { NativeSelectOption } from "@/components/ui/native-select";
 
 // Create hoisted mocks
 const { getPriceKgPlanMock, listPriceKgTypesMock, listPriceKgBrandsMock, openBagMock } = vi.hoisted(() => ({
@@ -165,7 +164,7 @@ describe("useOpenBag hook", () => {
       );
 
       await withMockFetch(responses, async () => {
-        let scanResult: Awaited<ReturnType<typeof result.current.searchProduct>>;
+        let scanResult!: Awaited<ReturnType<typeof result.current.searchProduct>>;
         await act(async () => {
           scanResult = await result.current.searchProduct("7791234567890");
         });
@@ -373,7 +372,7 @@ describe("useOpenBag hook", () => {
       const { result } = renderHook(() => useOpenBag({ branchId }));
       await waitFor(() => expect(result.current.loadingCells).toBe(false));
 
-      let openResult: Awaited<ReturnType<typeof result.current.openBag>>;
+      let openResult!: Awaited<ReturnType<typeof result.current.openBag>>;
       await act(async () => {
         openResult = await result.current.openBag("product-1", "cell-1");
       });
