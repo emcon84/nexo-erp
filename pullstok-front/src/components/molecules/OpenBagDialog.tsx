@@ -52,7 +52,13 @@ export const OpenBagDialog = ({
   const [selectedCellId, setSelectedCellId] = useState("");
   const [barcode, setBarcode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [cellSearch, setCellSearch] = useState("");
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  // Filtrar celdas por búsqueda (case-insensitive)
+  const filteredCellOptions = cellOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(cellSearch.toLowerCase())
+  );
 
   // Focus barcode input when dialog opens
   useEffect(() => {
@@ -67,6 +73,7 @@ export const OpenBagDialog = ({
       setScannedProduct(null);
       setSelectedCellId("");
       setBarcode("");
+      setCellSearch("");
       clearError();
     }
   }, [open, clearError]);
@@ -202,11 +209,22 @@ export const OpenBagDialog = ({
             <Label htmlFor="cell-select" className="text-sm font-medium">
               Celda destino
             </Label>
+            {/* Filtro de búsqueda para las celdas */}
+            <Input
+              id="cell-search"
+              type="text"
+              placeholder="Filtrar celdas..."
+              className="mb-1"
+              onChange={(e) => setCellSearch(e.target.value)}
+              value={cellSearch}
+              disabled={loadingCells || !scannedProduct}
+              aria-label="Buscar celda por marca, tipo o especie"
+            />
             <NativeSelect
               id="cell-select"
               value={selectedCellId}
               onValueChange={setSelectedCellId}
-              options={cellOptions}
+              options={filteredCellOptions}
               placeholder="Seleccioná una celda"
               disabled={!scannedProduct || loadingCells}
               aria-label="Celda destino para abrir bolsa"
