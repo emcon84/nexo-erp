@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Landmark, ShoppingCart } from "lucide-react";
+import { Landmark, ShoppingCart, PackageOpen } from "lucide-react";
 import { toast } from "react-toastify";
 import { API_URL } from "@/constants";
 import { VendorCatalogTab } from "@/components/organisms/VendorCatalogTab";
@@ -9,6 +9,7 @@ import { useVendorCart } from "@/components/hooks/useVendorCart";
 import { useVendorCheckout } from "@/components/hooks/useVendorCheckout";
 import { useGetCurrentCashSession } from "@/components/hooks/useCashSession";
 import { VendorOrderPanel, type VendorOrderPanelApi } from "@/components/molecules/VendorOrderPanel";
+import { OpenBagDialog } from "@/components/molecules/OpenBagDialog";
 import { Loader } from "@/components/atoms/loader";
 import { Button } from "@/components/ui/button";
 import { imgSrc } from "@/components/hooks/vendorCatalogHelpers";
@@ -60,6 +61,9 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
   // null = sin modal abierto. La rama balanza (isScale) NO pasa por acá: se
   // agrega directo al pedido (flujo suelto intacto).
   const [scanProduct, setScanProduct] = useState<ScannedProduct | null>(null);
+
+  // Modal de "Abrir bolsa" - flujo para abrir bolsas y creditar kg a celda suelta
+  const [openBagDialogOpen, setOpenBagDialogOpen] = useState(false);
 
   // Modal de pago: lo abre la tecla V (listado y panel) y el botón Vender.
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -280,24 +284,36 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
             </p>
           </div>
 
-          {/* ── Segmented tabs ── */}
-          <div className="flex w-fit gap-1 rounded-lg bg-muted p-1">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                aria-pressed={tab === t.id}
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  "flex-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                  tab === t.id
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+          {/* ── Segmented tabs + Abrir bolsa button ── */}
+          <div className="flex items-center gap-3">
+            <div className="flex w-fit gap-1 rounded-lg bg-muted p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  aria-pressed={tab === t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "flex-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                    tab === t.id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {tab === "unidad" && (
+              <Button
+                onClick={() => setOpenBagDialogOpen(true)}
+                className="whitespace-nowrap"
+                aria-label="Abrir bolsa"
               >
-                {t.label}
-              </button>
-            ))}
+                <PackageOpen className="h-4 w-4 mr-2" />
+                Abrir bolsa
+              </Button>
+            )}
           </div>
         </div>
 
@@ -401,6 +417,16 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* ── Modal de Abrir bolsa ── */}
+    <OpenBagDialog
+      branchId={branchId}
+      open={openBagDialogOpen}
+      onOpenChange={setOpenBagDialogOpen}
+      onSuccess={() => {
+        // Optionally refresh loose stock tab data here
+      }}
+    />
     </>
   );
 };
