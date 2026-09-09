@@ -199,7 +199,10 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
   // Capturador global (fase CAPTURE) del patrón de la pistola. Reset si hay
   // letras o pausas largas; solo un run de dígitos (≥6) + Enter se trata como
   // escaneo. Números cortos y texto no se interceptan.
+  // IMPORTANTE: Si el diálogo "Abrir bolsa" está abierto, NO interceptamos
+  // el escaneo para que el input del diálogo reciba el código de barras.
   useEffect(() => {
+    if (openBagDialogOpen) return; // El diálogo maneja su propio input
     let buffer = "";
     let lastKeyAt = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -238,7 +241,7 @@ export const UnifiedPos = ({ branchId }: UnifiedPosProps) => {
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [handleScan]);
+  }, [handleScan, openBagDialogOpen]);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "unidad", label: "Por unidad" },
