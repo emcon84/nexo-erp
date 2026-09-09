@@ -17,13 +17,19 @@ import { round2 } from "../utils/money";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+// Layout types: existing Alican + new multi-brand providers
 export type Layout = "SECO" | "WET";
+export type ProviderLayout = Layout | "eukanuba" | "royal-canin" | "page7-multi";
 
 export interface ParsedRow {
   nombre: string;
   marca: string | null;
   linea: string | null;
   sublinea: string | null;
+  // New optional fields for multi-brand providers
+  gama?: string | null;
+  tipo?: string | null;
+  codigo?: string | null;
   unidadEmpaque: string | null;
   precioSinIva: number | null;
   precioConIva: number | null;
@@ -72,20 +78,38 @@ export function detectLayout(text: string): Layout {
   throw new LayoutNotSupportedError();
 }
 
-/** VIGENCIA dd/mm/aaaa → ISO "YYYY-MM-DD"; null when absent or unparseable. */
+/** VIGENCIA dd/mm/aaaa → ISO "YYYY-MM-DD"; null when absent or unparseable.
+ * Also supports "dd de Mes yyyy" format (e.g., "07 de Septiembre 2026"). */
 export function capturePeriod(text: string): string | null {
-  const m = /VIGENCIA\s+(\d{2})\/(\d{2})\/(\d{4})/.exec(text);
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  return `${yyyy}-${mm}-${dd}`;
+  // Try dd/mm/yyyy first
+  let m = /VIGENCIA\s+(\d{2})\/(\d{2})\/(\d{4})/.exec(text);
+  if (m) {
+    const [, dd, mm, yyyy] = m;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  // Try "dd de Mes yyyy" (Spanish month names)
+  const monthMap: Record<string, string> = {
+    enero: "01", febrero: "02", marzo: "03", abril: "04",
+    mayo: "05", junio: "06", julio: "07", agosto: "08",
+    septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12",
+  };
+  m = /VIGENCIA\s+(\d{1,2})\s+de\s+([a-záéíóú]+)\s+(\d{4})/i.exec(text);
+  if (m) {
+    const [, dd, mes, yyyy] = m;
+    const mm = monthMap[mes.toLowerCase()];
+    if (mm) return `${yyyy}-${mm}-${dd.padStart(2, "0")}`;
+  }
+  return null;
 }
 
 /**
  * AR price normalization (spec REQ-3). Own algorithm — the existing
  * parsePrice() in scripts/load-distributor-pdfs.ts is buggy for integer
  * thousands ("8.795" → 8.795 instead of 8795) and must NOT be reused.
+ * Now handles formats like "$ 7 .600,11" (spaces around thousands separator).
  */
 export function normalizePrice(raw: string): number | null {
+  // Remove $, spaces, non-breaking spaces — but keep dots and commas for now
   const s = String(raw).trim().replace(/\$/g, "").replace(/[\s\u00A0]/g, "");
   if (!/^[0-9.,]+$/.test(s)) return null;
   // Duplicated/inconsistent adjacent separators ("1..2", "1,.5") → null.
@@ -182,6 +206,486 @@ function cleanLines(text: string): string[] {
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !isNoiseLine(l));
+}
+
+// ============================================================================
+// MULTI-BRAND PROVIDER PARSER (generic column-based)
+// ============================================================================
+
+/** Provider configuration for column-based parsing. */
+export interface ProviderConfig {
+  provider: string;
+  layout: "hierarchical-3lvl" | "hierarchical-2lvl" | "flat-multi";
+  /** Header synonyms: internal field -> possible header texts in PDF. */
+  headerSynonyms: Record<string, string[]>;
+  /** Hierarchy inference rules. */
+  hierarchyRules: {
+    type: "hierarchical-3lvl" | "hierarchical-2lvl" | "flat-multi";
+    impliedBrand?: string;           // for Eukanuba (brand not in rows)
+    marcaColumn?: string;            // for Page7 (marca in each row)
+    level1Source?: "gama-column" | "implied-brand" | "allcaps-line";
+    level2Source?: "tipo-column" | "allcaps-sublinea" | "allcaps-line";
+    level3Source?: "allcaps-sublinea";
+  };
+  /** How to infer brand for each row. */
+  brandInference: "implied" | "gama-tipo" | "marca-column";
+}
+
+/** Detected layout info for dispatching to correct parser. */
+export interface DetectedLayout {
+  provider: "eukanuba" | "royal-canin" | "page7-multi" | "alican" | "unknown";
+  layout: "hierarchical-3lvl" | "hierarchical-2lvl" | "flat-multi" | "seco" | "wet";
+  sections: Array<{
+    startLine: number;
+    endLine: number;
+    vigencia: string | null;
+    headerLine: number;
+    columnMap: Record<string, number>; // internal field -> column index
+  }>;
+}
+
+/** Known provider configs. */
+const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+  "eukanuba": {
+    provider: "eukanuba",
+    layout: "hierarchical-3lvl",
+    headerSynonyms: {
+      codigo: ["CÓD.", "CÓDIGO", "CODIGO"],
+      descripcion: ["DESCRIPCIÓN", "DESCRIPCION"],
+      kg: ["KG x U.", "KG X U.", "KG"],
+      precioSinIva: ["PRECIO UNITARIO (SIN IVA)", "PRECIO UNITARIO SIN IVA"],
+      precioConIva: ["PRECIO SUGERIDO PUBLICO (CON IVA)", "PRECIO SUGERIDO (CON IVA)", "PRECIO SUGERIDO PUBLICO CON IVA"],
+    },
+    hierarchyRules: {
+      type: "hierarchical-3lvl",
+      impliedBrand: "EUKANUBA",
+      level1Source: "implied-brand",
+      level2Source: "allcaps-line",
+      level3Source: "allcaps-sublinea",
+    },
+    brandInference: "implied",
+  },
+  "royal-canin": {
+    provider: "royal-canin",
+    layout: "hierarchical-2lvl",
+    headerSynonyms: {
+      gama: ["GAMA"],
+      tipo: ["TIPO"],
+      codigo: ["CÓDIGO", "CODIGO"],
+      descripcion: ["Descripcion", "DESCRIPCIÓN", "DESCRIPCION"],
+      kg: ["KG/GR", "KG / GR"],
+      precioSinIva: ["PRECIO UNITARIO (SIN IVA)", "PRECIO UNITARIO SIN IVA"],
+      precioConIva: ["PRECIO SUGERIDO AL PÚBLICO (con IVA)", "PRECIO SUGERIDO AL PUBLICO (CON IVA)", "PRECIO SUGERIDO AL PUBLICO CON IVA"],
+    },
+    hierarchyRules: {
+      type: "hierarchical-2lvl",
+      level1Source: "gama-column",
+      level2Source: "tipo-column",
+    },
+    brandInference: "gama-tipo",
+  },
+  "page7-multi": {
+    provider: "page7-multi",
+    layout: "flat-multi",
+    headerSynonyms: {
+      codigo: ["CODIGO", "CÓDIGO"],
+      marca: ["MARCA"],
+      descripcion: ["DESCRIPCION", "DESCRIPCIÓN"],
+      precioSinIva: ["PRECIO UNITARIO (SIN IVA)", "PRECIO UNITARIO SIN IVA"],
+      precioConIva: ["PRECIO SUGERIDO AL PUBLICO (CON IVA)", "PRECIO SUGERIDO AL PUBLICO CON IVA"],
+    },
+    hierarchyRules: {
+      type: "flat-multi",
+      marcaColumn: "marca",
+    },
+    brandInference: "marca-column",
+  },
+};
+
+/** Normalize header text for matching (remove accents, case, punctuation). */
+function normalizeHeader(h: string): string {
+  return h
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[()]/g, "")
+    .replace(/[—-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Find column index by trying synonyms against normalized headers. */
+function findColumnIndex(headers: string[], synonyms: string[]): number {
+  const normHeaders = headers.map(normalizeHeader);
+  const normSynonyms = synonyms.map(normalizeHeader);
+  for (const syn of normSynonyms) {
+    const idx = normHeaders.indexOf(syn);
+    if (idx >= 0) return idx;
+    // Try partial match (header contains synonym or vice versa)
+    for (let i = 0; i < normHeaders.length; i++) {
+      if (normHeaders[i].includes(syn) || syn.includes(normHeaders[i])) return i;
+    }
+  }
+  return -1;
+}
+
+/** Reconstruct multi-line headers (e.g., "PRECIO UNITARIO" + "(SIN IVA)" on next line). */
+function reconstructHeaders(lines: string[], startIdx: number): { headers: string[]; nextIdx: number } {
+  const headerLines: string[] = [];
+  let idx = startIdx;
+  // Collect consecutive lines that look like headers (no prices, short-ish)
+  while (idx < lines.length) {
+    const line = lines[idx].trim();
+    if (!line) { idx++; continue; }
+    // Stop if line looks like a data row (has numbers + $ or code pattern)
+    if (/^\d{5,}/.test(line) || /\$\s*[\d.,]/.test(line)) break;
+    // Stop if it's a known noise/header marker
+    if (/^(VIGENCIA|LISTA DE PRECIOS|MODALIDAD|GAMA|TIPO)\b/i.test(line)) break;
+    headerLines.push(line);
+    idx++;
+    // Heuristic: usually 1-3 lines for headers
+    if (headerLines.length >= 3) break;
+  }
+  // Join multi-line headers and split by multiple spaces (column separator)
+  const joined = headerLines.join(" ");
+  // Split by 2+ spaces (typical column separator in pdf-parse output)
+  const headers = joined.split(/\s{2,}/).map(h => h.trim()).filter(h => h.length > 0);
+  return { headers, nextIdx: idx };
+}
+
+/** Detect provider and layout from full PDF text. */
+export function detectProviderLayout(text: string): DetectedLayout {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+  // First check for Alican (existing logic)
+  if (/LISTA DE PRECIOS ALICAN/i.test(text)) {
+    const isWet = /UNIDAD DE EMPAQUE/i.test(text);
+    return {
+      provider: "alican",
+      layout: isWet ? "wet" : "seco",
+      sections: [{ startLine: 0, endLine: lines.length, vigencia: capturePeriod(text), headerLine: -1, columnMap: {} }],
+    };
+  }
+
+  // Detect Eukanuba: page 1 has "EUKANUBA" brand lines + "PRECIO UNITARIO (SIN IVA)" + "KG x U."
+  if (/EUKANUBA/i.test(text) && /PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(text) && /KG\s*x\s*U\./i.test(text)) {
+    return detectEukanubaSections(lines, text);
+  }
+
+  // Detect Royal Canin: has "GAMA" + "TIPO" columns + "PRECIO UNITARIO (SIN IVA)"
+  if (/GAMA\s*TIPO/i.test(text) || (/GAMA/i.test(text) && /TIPO/i.test(text) && /PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(text))) {
+    return detectRoyalCaninSections(lines, text);
+  }
+
+  // Detect Page 7 multi-brand: multiple small sections with MARCA column
+  if (/MARCA\s+DESCRIPCION/i.test(text) && /PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(text)) {
+    return detectPage7Sections(lines, text);
+  }
+
+  // Unknown
+  throw new LayoutNotSupportedError("Formato de planilla no reconocido (proveedor no soportado)");
+}
+
+/** Detect Eukanuba sections (page 1). */
+function detectEukanubaSections(lines: string[], fullText: string): DetectedLayout {
+  const sections: DetectedLayout["sections"] = [];
+  const config = PROVIDER_CONFIGS["eukanuba"];
+  let currentStart = 0;
+  let currentVigencia: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Capture vigencia
+    const vig = capturePeriod(line);
+    if (vig) currentVigencia = vig;
+
+    // Look for header line with our key columns
+    if (/PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(line) && /KG\s*x\s*U\./i.test(line)) {
+      const { headers, nextIdx } = reconstructHeaders(lines, i);
+      const columnMap: Record<string, number> = {};
+      for (const [field, synonyms] of Object.entries(config.headerSynonyms)) {
+        columnMap[field] = findColumnIndex(headers, synonyms);
+      }
+      sections.push({
+        startLine: currentStart,
+        endLine: lines.length,
+        vigencia: currentVigencia,
+        headerLine: i,
+        columnMap,
+      });
+      currentStart = nextIdx;
+    }
+  }
+
+  if (sections.length === 0) {
+    // Fallback: single section for whole page
+    sections.push({
+      startLine: 0,
+      endLine: lines.length,
+      vigencia: capturePeriod(fullText),
+      headerLine: -1,
+      columnMap: {},
+    });
+  }
+
+  return { provider: "eukanuba", layout: "hierarchical-3lvl", sections };
+}
+
+/** Detect Royal Canin sections (pages 2-6). */
+function detectRoyalCaninSections(lines: string[], fullText: string): DetectedLayout {
+  const sections: DetectedLayout["sections"] = [];
+  const config = PROVIDER_CONFIGS["royal-canin"];
+  let currentStart = 0;
+  let currentVigencia: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const vig = capturePeriod(line);
+    if (vig) currentVigencia = vig;
+
+    // Look for header with GAMA + TIPO + PRECIO UNITARIO
+    if (/GAMA/i.test(line) && /TIPO/i.test(line) && /PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(line)) {
+      const { headers, nextIdx } = reconstructHeaders(lines, i);
+      const columnMap: Record<string, number> = {};
+      for (const [field, synonyms] of Object.entries(config.headerSynonyms)) {
+        columnMap[field] = findColumnIndex(headers, synonyms);
+      }
+      sections.push({
+        startLine: currentStart,
+        endLine: lines.length,
+        vigencia: currentVigencia,
+        headerLine: i,
+        columnMap,
+      });
+      currentStart = nextIdx;
+    }
+  }
+
+  if (sections.length === 0) {
+    sections.push({
+      startLine: 0,
+      endLine: lines.length,
+      vigencia: capturePeriod(fullText),
+      headerLine: -1,
+      columnMap: {},
+    });
+  }
+
+  return { provider: "royal-canin", layout: "hierarchical-2lvl", sections };
+}
+
+/** Detect Page 7 multi-brand sections. */
+function detectPage7Sections(lines: string[], fullText: string): DetectedLayout {
+  const sections: DetectedLayout["sections"] = [];
+  const config = PROVIDER_CONFIGS["page7-multi"];
+  let currentStart = 0;
+  let currentVigencia: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const vig = capturePeriod(line);
+    if (vig) currentVigencia = vig;
+
+    // Look for header with MARCA + DESCRIPCION + PRECIO UNITARIO
+    if (/MARCA/i.test(line) && /DESCRIPCION/i.test(line) && /PRECIO UNITARIO\s*\(?\s*SIN\s+IVA\)?/i.test(line)) {
+      const { headers, nextIdx } = reconstructHeaders(lines, i);
+      const columnMap: Record<string, number> = {};
+      for (const [field, synonyms] of Object.entries(config.headerSynonyms)) {
+        columnMap[field] = findColumnIndex(headers, synonyms);
+      }
+      sections.push({
+        startLine: currentStart,
+        endLine: nextIdx,
+        vigencia: currentVigencia,
+        headerLine: i,
+        columnMap,
+      });
+      currentStart = nextIdx;
+    }
+  }
+
+  if (sections.length === 0) {
+    sections.push({
+      startLine: 0,
+      endLine: lines.length,
+      vigencia: capturePeriod(fullText),
+      headerLine: -1,
+      columnMap: {},
+    });
+  }
+
+  return { provider: "page7-multi", layout: "flat-multi", sections };
+}
+
+/** Main entry: parse any supported provider's price list. */
+export function parsePriceList(text: string, detected?: DetectedLayout): ParsedPriceList {
+  const layoutInfo = detected ?? detectProviderLayout(text);
+
+  if (layoutInfo.provider === "alican") {
+    // Use existing Alican parsers
+    if (layoutInfo.layout === "wet") return parseAlicanWet(text);
+    return parseAlicanSeco(text);
+  }
+
+  const config = PROVIDER_CONFIGS[layoutInfo.provider];
+  if (!config) throw new LayoutNotSupportedError(`Proveedor no soportado: ${layoutInfo.provider}`);
+
+  const lines = cleanLines(text);
+  const rows: ParsedRow[] = [];
+
+  for (const section of layoutInfo.sections) {
+    const sectionLines = lines.slice(section.startLine, section.endLine);
+    const columnMap = section.columnMap;
+
+    // Hierarchy state for this section
+    let currentGama: string | null = null;
+    let currentTipo: string | null = null;
+    let currentMarca: string | null = config.hierarchyRules.impliedBrand ?? null;
+    let currentLinea: string | null = null;
+    let currentSublinea: string | null = null;
+
+    for (let i = 0; i < sectionLines.length; i++) {
+      const line = sectionLines[i];
+
+      // Skip header line
+      if (i === 0 && section.headerLine >= 0) continue;
+
+      // Detect hierarchy lines (ALL CAPS lines without prices)
+      if (isHierarchyLine(line, config)) {
+        const hierarchy = parseHierarchyLine(line, config, {
+          currentGama, currentTipo, currentMarca, currentLinea, currentSublinea
+        });
+        currentGama = hierarchy.gama;
+        currentTipo = hierarchy.tipo;
+        currentMarca = hierarchy.marca;
+        currentLinea = hierarchy.linea;
+        currentSublinea = hierarchy.sublinea;
+        continue;
+      }
+
+      // Try to parse as data row using column indices
+      const parsed = parseDataRowByColumns(line, columnMap, config);
+      if (parsed) {
+        rows.push({
+          ...parsed,
+          marca: parsed.marca ?? currentMarca,
+          linea: parsed.linea ?? currentLinea,
+          sublinea: parsed.sublinea ?? currentSublinea,
+          gama: parsed.gama ?? currentGama,
+          tipo: parsed.tipo ?? currentTipo,
+        });
+      } else if (line && !isNoiseLine(line)) {
+        // Non-empty, non-noise, non-parsable → error row
+        rows.push({
+          nombre: line,
+          marca: currentMarca,
+          linea: currentLinea,
+          sublinea: currentSublinea,
+          gama: currentGama,
+          tipo: currentTipo,
+          codigo: null,
+          unidadEmpaque: null,
+          precioSinIva: null,
+          precioConIva: null,
+        });
+      }
+    }
+  }
+
+  return { period: layoutInfo.sections[0]?.vigencia ?? capturePeriod(text), rows };
+}
+
+/** Check if line is a hierarchy marker (ALL CAPS, no prices). */
+function isHierarchyLine(line: string, config: ProviderConfig): boolean {
+  if (!/^[A-ZÑ0-9][A-ZÑ0-9 &.()+'-]*$/.test(line)) return false;
+  if (!/[A-ZÑ]/.test(line)) return false;
+  if (/\$\s*[\d.,]/.test(line)) return false; // has price → data row
+  if (/^\d{5,}/.test(line)) return false; // starts with code → data row
+  // For Eukanuba: brand implied, look for LINEA markers
+  if (config.provider === "eukanuba" && /^(L[IÍ]NEA|PUPPY|ADULT|SENIOR|FIT BODY|PREMIUM|LAMB|KITTEN|CAT|GATO)/i.test(line)) return true;
+  // For Royal Canin: GAMA/TIPO are in columns, not separate lines usually
+  // For Page7: MARCA is in column
+  return true; // conservative: treat ALL CAPS as potential hierarchy
+}
+
+/** Parse hierarchy line based on provider rules. */
+function parseHierarchyLine(
+  line: string,
+  config: ProviderConfig,
+  current: { currentGama: string | null; currentTipo: string | null; currentMarca: string | null; currentLinea: string | null; currentSublinea: string | null }
+): { gama: string | null; tipo: string | null; marca: string | null; linea: string | null; sublinea: string | null } {
+  const rules = config.hierarchyRules;
+  const upper = line.toUpperCase();
+
+  // Eukanuba: implied brand, LÍNEA = level2, allcaps = level3
+  if (rules.type === "hierarchical-3lvl" && rules.impliedBrand) {
+    if (/^L[IÍ]NEA\s+/i.test(line)) {
+      return { gama: current.currentGama, tipo: current.currentTipo, marca: rules.impliedBrand, linea: line.replace(/^L[IÍ]NEA\s+/i, "").trim(), sublinea: null };
+    }
+    return { gama: current.currentGama, tipo: current.currentTipo, marca: rules.impliedBrand, linea: current.currentLinea, sublinea: line };
+  }
+
+  // Royal Canin: GAMA/TIPO in columns, not separate lines typically
+  if (rules.type === "hierarchical-2lvl") {
+    // Most hierarchy is in columns; this is fallback
+    if (/^(FELINE|CANINE|VETERINARY|HEALTH|NUTRITION|SIZE|MINI|MEDIUM|MAXI|GIANT|X-SMALL)/i.test(line)) {
+      return { gama: line, tipo: current.currentTipo, marca: current.currentMarca, linea: current.currentLinea, sublinea: current.currentSublinea };
+    }
+    return { gama: current.currentGama, tipo: line, marca: current.currentMarca, linea: current.currentLinea, sublinea: current.currentSublinea };
+  }
+
+  // Page7: flat with MARCA column, but section headers like "WIPUP BENTONÍTICA"
+  if (rules.type === "flat-multi") {
+    if (config.hierarchyRules.marcaColumn) {
+      return { gama: current.currentGama, tipo: current.currentTipo, marca: line, linea: current.currentLinea, sublinea: current.currentSublinea };
+    }
+    return { gama: current.currentGama, tipo: current.currentTipo, marca: current.currentMarca, linea: current.currentLinea, sublinea: current.currentSublinea };
+  }
+
+  return { gama: current.currentGama, tipo: current.currentTipo, marca: current.currentMarca, linea: current.currentLinea, sublinea: current.currentSublinea };
+}
+
+/** Parse a data row using column indices from header. */
+function parseDataRowByColumns(
+  line: string,
+  columnMap: Record<string, number>,
+  config: ProviderConfig
+): ParsedRow | null {
+  // Split line by multiple spaces (pdf-parse column separator)
+  const cols = line.split(/\s{2,}/).map(c => c.trim()).filter(c => c.length > 0);
+  if (cols.length < 2) return null; // not enough columns
+
+  const getCol = (field: string): string | null => {
+    const idx = columnMap[field];
+    return idx >= 0 && idx < cols.length ? cols[idx] : null;
+  };
+
+  const codigo = getCol("codigo");
+  const descripcion = getCol("descripcion");
+  const kg = getCol("kg");
+  const precioSinIva = getCol("precioSinIva");
+  const precioConIva = getCol("precioConIva");
+  const marcaCol = getCol("marca");
+  const gamaCol = getCol("gama");
+  const tipoCol = getCol("tipo");
+
+  if (!descripcion && !codigo) return null; // need at least name or code
+
+  const nombre = descripcion ?? codigo ?? "";
+  const unidadEmpaque = extractUnit(nombre);
+
+  return {
+    nombre,
+    marca: marcaCol,
+    linea: null,
+    sublinea: null,
+    gama: gamaCol,
+    tipo: tipoCol,
+    codigo: codigo,
+    unidadEmpaque,
+    precioSinIva: precioSinIva ? normalizePrice(precioSinIva) : null,
+    precioConIva: precioConIva ? normalizePrice(precioConIva) : null,
+  };
 }
 
 // ── Suggested price (spec REQ-7, design precision note) ────────────────────

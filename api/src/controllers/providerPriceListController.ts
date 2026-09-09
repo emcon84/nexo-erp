@@ -33,12 +33,15 @@ import {
   buildCatalogIndex,
   computeSuggestedPrice,
   detectLayout,
+  detectProviderLayout,
   LayoutNotSupportedError,
   matchRows,
   normalizeName,
   parseAlicanSeco,
   parseAlicanWet,
+  parsePriceList,
   type Layout,
+  type ProviderLayout,
   type PreviewRow,
 } from "../services/providerPriceListService";
 
@@ -58,6 +61,12 @@ export interface ApplyDecision {
   marca?: string | null;
   linea?: string | null;
   sublinea?: string | null;
+  // New fields for multi-brand support
+  gama?: string | null;
+  tipo?: string | null;
+  codigo?: string | null;
+  /** Proveedor específico de esta fila (opcional). Si no se provee, se infiere de marca/gama/tipo. */
+  providerName?: string | null;
   unidadEmpaque?: string | null;
   precioSinIva?: number | null;
   precioConIva?: number | null;
@@ -180,12 +189,14 @@ export async function buildPreview(
   db: { product: { findMany: (args: any) => Promise<any[]> } },
   organizationId: string,
   text: string,
-): Promise<{ layout: Layout; period: string | null; rows: PreviewRow[] }> {
-  const layout = detectLayout(text);
-  const { period, rows } =
-    layout === "SECO" ? parseAlicanSeco(text) : parseAlicanWet(text);
+): Promise<{ layout: string; period: string | null; rows: PreviewRow[] }> {
+  // Use new multi-brand parser (falls back to Alican parsers for alican)
+  const { detectProviderLayout, parsePriceList } = await import("../services/providerPriceListService");
+  const detected = detectProviderLayout(text);
+  const { period, rows: parsedRows } = parsePriceList(text, detected);
   const index = await buildCatalogIndex(db, organizationId);
-  return { layout, period, rows: matchRows(rows, index) };
+  const matchedRows = matchRows(parsedRows, index);
+  return { layout: detected.layout, period, rows: matchedRows };
 }
 
 export const importPriceList = async (req: Request, res: Response) => {
@@ -240,7 +251,7 @@ async function importPriceListCore(req: Request, res: Response) {
     // D10: apply con decisiones default (matched + multi-match[0] importados;
     // unmatched / duplicado-extra / error omitidos).
     const result = await applyPriceListCore(organizationId, {
-      layout,
+      layout: layout as Layout | "eukanuba" | "royal-canin" | "page7-multi" | "hierarchical-3lvl" | "hierarchical-2lvl" | "flat-multi",
       period,
       sourceFilename,
       rows: defaultDecisions(rows),
@@ -342,7 +353,7 @@ async function syncHqStockInline(
 async function applyPriceListCore(
   organizationId: string,
   body: {
-    layout: Layout;
+    layout: Layout | "eukanuba" | "royal-canin" | "page7-multi" | "hierarchical-3lvl" | "hierarchical-2lvl" | "flat-multi";
     period: string | null;
     sourceFilename: string;
     applyPrices?: boolean;
@@ -387,7 +398,11 @@ async function applyPriceListCore(
     }
   }
 
-  const type = layout === "SECO" ? "SECO" : "WET";
+  // Map provider layouts to PriceList types (SECO/WET)
+  const type = (() => {
+    if (layout === "SECO" || layout === "eukanuba" || layout === "royal-canin" || layout === "hierarchical-3lvl" || layout === "hierarchical-2lvl") return "SECO";
+    return "WET";
+  })();
 
   return prisma.$transaction(async (tx) => {
     // Anti-fuga (REQ-12): los productId deben existir en la org. El cliente tx
@@ -429,34 +444,32 @@ async function applyPriceListCore(
       },
     });
 
-    // ── Proveedor de la planilla (sdd/alican-wholesale-price-list/providers) ──
-    // Si el payload trae providerName (ya validado no-vacío por Zod), se crea o
-    // reutiliza el Provider de la org por nombre case-insensitive (findFirst, no
-    // findUnique — bloqueado por la extensión multi-tenant). Se asigna providerId
-    // a TODOS los productos tocados: los matcheados/reutilizados (updateMany) y
-    // los creados (create). Las filas planilla-only (sin productId) NO tocan
-    // producto → no justifican resolver el proveedor. Sin providerName → null
-    // (back-compat total: nada cambia respecto al comportamiento original).
-    const touchesProducts =
-      imports.some((r) => r.productId) ||
-      (applyPrices && imports.some((r) => r.precioConIva != null));
-    let providerId: string | null = null;
-    if (providerNameTrimmed && touchesProducts) {
+    // ── Proveedor de la planilla (multi-brand support) ──
+    // Resolvemos providerId por fila usando providerName de cada fila (o fallback global).
+    // Cache para evitar consultas repetidas a la BD.
+    const providerIdCache = new Map<string, string>();
+    async function getProviderIdForRow(rowProviderName: string | null | undefined): Promise<string | null> {
+      const name = (rowProviderName ?? providerNameTrimmed ?? "").trim();
+      if (!name) return null;
+      if (providerIdCache.has(name)) return providerIdCache.get(name)!;
       const existing = await tx.provider.findFirst({
-        where: {
-          organizationId,
-          name: { equals: providerNameTrimmed, mode: "insensitive" },
-        },
+        where: { organizationId, name: { equals: name, mode: "insensitive" } },
         select: { id: true },
       });
+      let id: string | null = null;
       if (existing) {
-        providerId = existing.id;
+        id = existing.id;
       } else {
-        const provider = await tx.provider.create({
-          data: { name: providerNameTrimmed, organizationId },
-        });
-        providerId = provider.id;
+        const provider = await tx.provider.create({ data: { name, organizationId } });
+        id = provider.id;
       }
+      providerIdCache.set(name, id);
+      return id;
+    }
+
+    // Helper to determine if a row touches products (needs provider)
+    function rowTouchesProducts(r: ApplyDecision): boolean {
+      return !!r.productId || (applyPrices && r.precioConIva != null);
     }
 
     // ── Aplicar precios: crear los no matcheados (applyPrices ON) ──────────
@@ -501,6 +514,7 @@ async function applyPriceListCore(
           resolveByPosition.set(r.position, reusedId);
           continue;
         }
+        const rowProviderId = rowTouchesProducts(r) ? await getProviderIdForRow(r.providerName) : null;
         const product = await tx.product.create({
           data: {
             name: normalizeProductName(r.nombre),
@@ -509,7 +523,7 @@ async function applyPriceListCore(
             categoryId: null,
             organizationId,
             suggestedPrice: computeSuggestedPrice(r.precioConIva, r.precioSinIva ?? null),
-            ...(providerId ? { providerId } : {}),
+            ...(rowProviderId ? { providerId: rowProviderId } : {}),
           },
         });
         const optionId = r.marca ? brandIndex.get(normalizeName(r.marca)) : undefined;
@@ -582,7 +596,10 @@ async function applyPriceListCore(
         data.price = roundBolsaPriceIfHigh(round2(r.precioConIva));
         priceUpdated++;
       }
-      if (providerId) data.providerId = providerId;
+      if (rowTouchesProducts(r)) {
+        const rowProviderId = await getProviderIdForRow(r.providerName);
+        if (rowProviderId) data.providerId = rowProviderId;
+      }
       await tx.product.updateMany({
         where: { id: productId },
         data,

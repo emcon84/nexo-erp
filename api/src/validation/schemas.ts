@@ -1050,6 +1050,12 @@ const decisionSchema = z.object({
   marca: z.string().nullable().optional(),
   linea: z.string().nullable().optional(),
   sublinea: z.string().nullable().optional(),
+  // New fields for multi-brand support
+  gama: z.string().nullable().optional(),
+  tipo: z.string().nullable().optional(),
+  codigo: z.string().nullable().optional(),
+  /** Proveedor específico de esta fila (opcional). Si no se provee, se usa el global. */
+  providerName: z.string().trim().nullable().optional(),
   unidadEmpaque: z.string().nullable().optional(),
   precioSinIva: z.coerce.number().nullable().optional(),
   precioConIva: z.coerce.number().nullable().optional(),
@@ -1057,7 +1063,7 @@ const decisionSchema = z.object({
 
 export const applyPriceListSchema = z
   .object({
-    layout: z.enum(["SECO", "WET"]),
+    layout: z.enum(["SECO", "WET", "eukanuba", "royal-canin", "page7-multi", "hierarchical-3lvl", "hierarchical-2lvl", "flat-multi"]),
     period: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Período inválido (YYYY-MM-DD)").nullable().optional(),
     sourceFilename: z.string().min(1, "sourceFilename requerido"),
     // Check "Aplicar precios al catálogo" (sdd/alican-wholesale-price-list/apply-prices).
