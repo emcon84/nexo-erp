@@ -1,0 +1,275 @@
+[
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Urinary",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029f2cbe.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Kitten",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029f1374.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Adult Cat Salmon",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074632367c1ae535933f.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Weight Control + Prolonged Satiety",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1751903220686bebf4b7982.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Adultos",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029f0bf4.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Adult Dog Weight Control + Prolonged Satiety",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1751903220686bebf4b82d5.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Adult Dog All Breeds Cordero",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074632367c1ae53584f9.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adultos 7+",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029ee01c.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Derma Control Adultos",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029ef930.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cachorros All Breeds",
+    "presentaciones": [
+      "3 kg",
+      "15 kg",
+      "20 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029eff94.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adulto Talla pequeña",
+    "presentaciones": [
+      "1",
+      "5 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029f061c.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adultos Talla Mediana y Grande",
+    "presentaciones": [
+      "3 kg",
+      "15 kg",
+      "20 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074269767c1a029ef1b9.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Wet Perros Adultos 7+",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac365d.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Dog Strong Heart",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074689567c1b08f1b679.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Dog Digest Comfort",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074689567c1b08f1c274.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility + Adult Dog Weight Control + Prolonged Satiety Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1751892771686bc3230ea26.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility+ Cat Strong Heart",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1755000661689b2f55d144b.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility + Cat Digest Comfort",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1755000661689b2f55d0a24.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility + Adult Cat Weight Control + Prolonged Satiety Wet Cat Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1755000152689b2d581a5a2.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adultos con carne de Cordero",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac1bd7.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adultos con carne de Cerdo",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac4a70.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cachorros con Carne Vacuna Seleccionada",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac2194.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Gatitos Sabor Natural",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac273b.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Wet Cat Urinary",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac2c12.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Adultos con Merluza",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac31d4.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Adultos con Carne Vacuna Seleccionada",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac3c2e.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Adultos con Carne Vacuna Seleccionada",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac40fe.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Agility",
+    "nombre": "Agility Cats Adulto con Carne de Pollo Seleccionada",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//174074274667c1a05ac4587.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  }
+]

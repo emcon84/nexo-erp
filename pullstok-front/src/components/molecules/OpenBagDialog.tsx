@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PackageOpen, Search, X } from "lucide-react";
+import { PackageOpen, Search } from "lucide-react";
 import { toast } from "react-toastify";
-import { useOpenBag, type ProductScanResult } from "@/components/hooks/useOpenBag";
+import { useOpenBag } from "@/components/hooks/useOpenBag";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, type NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 
 interface OpenBagDialogProps {
   branchId: string;
@@ -26,7 +25,7 @@ interface OpenBagDialogProps {
 interface ScannedProductDisplay {
   id: string;
   name: string;
-  weightKg: number;
+  weightKg: number | null;
   price: number;
   code?: string | null;
   barcode?: string | null;

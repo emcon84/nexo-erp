@@ -1,0 +1,547 @@
+[
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Senior +12 Lamb",
+    "presentaciones": [
+      "340 gr"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333549369b2f3c554aa9.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Wet Senior +12 Salmon & Chicken",
+    "presentaciones": [
+      "340 gr"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333549369b2f3c5e596c.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Cordero",
+    "presentaciones": [
+      "3 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17702060186983334263459.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE Wet Adult 7+",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333511469b2f24aba569.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Critical Nutrition SUERUM Wet Dog&Cat Food",
+    "presentaciones": [
+      "300 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177150469169970433ce42c.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Critical Nutrition Wet Dog&Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17715034596996ff63bfee9.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE VET ONC + Inmuno Wet Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17715030606996fdd4a2a92.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE VET Hypoallergenic Wet Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17715022466996faa6e88be.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE VET Renal Wet Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17713677076994ed1b8f4ed.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE VET Hepatic Wet Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17715009356996f587e33bc.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER KATZE VET Gastrointestinal Wet Cat Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17704039026986383e5d02e.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET ONC + Inmuno Wet Dog Food",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1771439018699603aa960cc.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Hypoallergenic Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17714383476996010b595fe.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Renal Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17713679916994ee370e2ec.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Hepatic Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17714355616995f6295a47d.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "SIEGER VET Urinary Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17714345666995f2467ae06.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Vet Gastrointestinal Wet Dog Food",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1770996357698f4285a97de.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Vet Renal Dry Dog Food",
+    "presentaciones": [
+      "3 kg",
+      "7.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17713679916994ee370e2ec.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger VET Gastrointestinal Dry Dog Food",
+    "presentaciones": [
+      "3 kg",
+      "7.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1770996357698f4285a97de.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Vet Renal Dry Cat Food",
+    "presentaciones": [
+      "1",
+      "5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17713677076994ed1b8f4ed.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze VET Gastrointestinal Dry Cat Food",
+    "presentaciones": [
+      "1.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17704039026986383e5d02e.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Criadores Wet All in One",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762304995690aa3e3cb024.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Wet Adult Hairball",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17817066206a32af7c1df8d.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Wet Adult Urinary",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17817066206a32af7c1b716.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Wet Kitten Chicken",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17817066206a32af7c1e804.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Wet Adult Salmon & Chicken",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//17817066206a32af7c1a521.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Criadores All in One",
+    "presentaciones": [
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-katze-criadores.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Adult 7+ Resveratrol",
+    "presentaciones": [
+      "1 kg",
+      "3 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333523969b2f2c7759a3.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Hairball & Stress Control",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333541169b2f373db244.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Kitten Inmuno Protect",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-katze-puppy.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Reduced Calorie",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333535769b2f33da34a8.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Urinary Tract",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-katze-urinary.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Sterilized",
+    "presentaciones": [
+      "1 kg",
+      "3 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177333538769b2f35ba0849.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Katze Adult High Quality Protein",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "10 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-karte-adult.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Ultra Vita Plus",
+    "presentaciones": [
+      "1.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762352479690b5d5fdfbac.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Mash Puppy's",
+    "presentaciones": [
+      "1.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762352479690b5d5fda2b1.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Ultra Osteoarticular",
+    "presentaciones": [
+      "1.5 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762352479690b5d5fdf455.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Adult Energy Recovery",
+    "presentaciones": [
+      "340 g",
+      "100 g",
+      "90 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177826193069fe1faa02a7e.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Senior",
+    "presentaciones": [
+      "340 g",
+      "100 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762304995690aa3e3cd680.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Reduced Calorie Adult",
+    "presentaciones": [
+      "340 g",
+      "100 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//1762304995690aa3e3cd1e0.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Adult Dermaprotect Wet",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/173894134767a623a30344d.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Criadores All in One",
+    "presentaciones": [
+      "340 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177826193069fe1faa03433.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Puppy Salmon & Chicken",
+    "presentaciones": [
+      "340 g",
+      "100 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177826193069fe1faa039b7.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Wet Adult Salmon & Chicken",
+    "presentaciones": [
+      "340 g",
+      "100 g"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/mkt/cdn//177826193069fe1faa02fc5.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Adult Medium & Large Breeds",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-adult-medium.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger High Performance All Breeds",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-high-performance.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Dermaprotect All Breeds",
+    "presentaciones": [
+      "3 kg",
+      "12 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-dermaprotect.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Senior Mini & Small All Breeds",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "12 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-senior-mini.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Puppy Medium & Large Breeds",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-puppy-medium.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Senior Medium & Large Breeds",
+    "presentaciones": [
+      "3 kg",
+      "15 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-senior-medium.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Puppy Mini & Small",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "12 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-puppy-mini.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Adult Mini & Small All Breeds",
+    "presentaciones": [
+      "1 kg",
+      "3 kg",
+      "12 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-adult-mini.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Criadores All in One",
+    "presentaciones": [
+      "15 kg",
+      "20 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-criadores.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  },
+  {
+    "marca": "Sieger",
+    "nombre": "Sieger Reduced Calorie",
+    "presentaciones": [
+      "3 kg",
+      "12 kg"
+    ],
+    "imageUrl": "https://cdn.alican.com.ar/gallery/sieger-reduced.webp",
+    "fuenteUrl": "https://staging-central.alican.com.ar/fetch/getdata"
+  }
+]

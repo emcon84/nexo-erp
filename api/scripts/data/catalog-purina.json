@@ -1,0 +1,618 @@
+[
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento Razas Medianas y Grandes Mente Activa",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Active-Mind-Razas-Medianas-y-Grandes-Med_1.png.webp?itok=D5KRi2zC",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/mente-activa/razas-medianas-grandes"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento adultos razas pequeñas Piel Sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-01/purina-pro-plan-flagship-perros-sensitive-skin-razas-peque%C3%B1as.png.webp?itok=WbpGwMVb",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/piel-sensible/adulto-razas-pequenas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento Reduced Calorie Razas Medianas y Grandes",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Reduced-Calorie-Pavo-%26-Arroz-M_L_1.png.webp?itok=4uFSqbLU",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/calorias-reducidas/medianas-grandes"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Cachorros Razas Medianas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/ProPlan-Puppy-Razas-Medianas-01.png.webp?itok=6UggafXK",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/cachorros/razas-medianas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Puppy Cachorros Razas Pequeñas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Puppy-Pollo-%26-Arroz-Small-Breed_1.png.webp?itok=ygwbn89t",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/cachorros/razas-pequenas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento Kitten para gatos con Optistart",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Kitten-Pollo-%26-H%C3%ADgado_1.png.webp?itok=5cjZM9Ke",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/producto/gatito"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Cachorros Razas Grandes",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/puppy_razas_grandes_front_por_plan.png.webp?itok=j-9_gyHJ",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/cachorros/razas-grandes"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Kitten Pollo en Salsa | Alimento húmedo para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/kitten_pollo_en_salsa_humedo_frente_pro_plan.jpg.webp?itok=WJz8zs9z",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/gatitos/pollo-en-salsa"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para Gato Adulto",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/gato_adulto_frenre_pro_plan.png.webp?itok=tipfaHzC",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/adultos-producto"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Adultos Pollo | Alimento húmedo para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/adulto_pollo_alimento_humedo_frente_pro_plan.jpg.webp?itok=VCWUFSzw",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/adulto/pollo-humedo"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Adultos Salmón | Alimento húmedo para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/adulto_salmon_humedo_frente_pro_plan.jpg.webp?itok=mMnjAifL",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/adulto/salmon-humedo"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Mente Activa Razas Pequeñas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Active-Mind-Razas-Medianas-y-Grandes-Sml_1.png.webp?itok=Xv5B1pzq",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/adultos-mayores/razas-pequenas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Reduced Calorie | Razas Pequeñas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Reduced-Calorie-Pavo-%26-Arroz-Sml-Bld_1.png.webp?itok=SfGbhUOt",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/calorias-reducidas/razas-pequenas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento adulto raza mediana grande Piel Sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-01/purina-pro-plan-flagship-perros-sensitive-skin-razas-medianas-y-grandes.png.webp?itok=y5SJPcjs",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/piel-sensible/adulto-medianas-grandes"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Adultos +7 | Alimento para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Adult-7%2B-Carne-%26-Arroz_1.png.webp?itok=J3cDT7xV",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/adulto-mayores/adulto-7-mas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento razas pequeñas Piel y Estómago Sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/Sensitive_Skin_Stomach%20Razas%20Pequen%CC%83as.png.webp?itok=6ouMqvwJ",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/piel-y-estomago-sensible/razas-pequenas"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento razas medianas Piel y Estómago Sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/Sensitive_Skin_Stomach_razas_medianas_por_plan.png.webp?itok=zejA8wT5",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/piel-estomago-sensible/medianas-grandes"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Adulto Pollo en Salsa",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/humedo_adulto_front_pro_plan.jpg.webp?itok=PZZE5QQQ",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/adulto/pollo-en-salsa"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento Gatos Esterilizados, con Tecnología OptiRenal",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/Gato_Sterilize_Frente_Pro_Plan.png.webp?itok=qqWscwvT",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/esterilizados/esterlizado"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Urinario Adultos | Alimento para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/Veterinary-Diets-Urinary-St_Ox-Feline_1.png.webp?itok=t9Hpkvp_",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/urinario/urinario"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Neurocare",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-nc-neurocare.png.webp?itok=Q7IZEtp5",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/neurologico"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Esterilizado Pollo en Salsa | Alimento húmedo para gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-08/Gato_Sterilize_Humedo_Frente_Pro_Plan.jpeg.webp?itok=pBu42AqQ",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/esterilizados/pollo-en-salsa"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Joint Movility JM",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-jm-joint-mobility.png.webp?itok=9e5p16sI",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/movilidad-articular"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Gastrointestinal",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-en-gastrointestinal.png.webp?itok=WVvmmuWs",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/gastroenterico"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para gatos Piel y Estómago Sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/Sensitive_Skin_and_Stomach_Gato_Frente_Pro_Plan.png.webp?itok=OwupViUn",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/piel-estomago-sensible/sensitive"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Obesity Management",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-om-obesity-management.png.webp?itok=7AV4vF8q",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/obesidad"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Renal Function",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-nf-renal-function.png.webp?itok=7q84V-hD",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/funcion-renal"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Urinary",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-dog-ur-urinary.png.webp?itok=5jxwC275",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/urinario"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para perros Hidrolizado",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-01/ProPlan-Hydrolyzed-Perro-Front_0.png.webp?itok=xmUXofV1",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/perros/hydrolizado"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para gatos Funcion Renal",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-cat-nf-renal-function-advanced-care.png.webp?itok=kfsg5Qwf",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/gatos/funcion-renal"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para gatos Dietas Veterinarias Urinary ST/OX",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-cat-ur-urinary.png.webp?itok=Cef-nF2c",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/gatos/urinario"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento | Dietas Veterinarias para gatos Obesidad OM",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-cat-om-obesity-management.png.webp?itok=vOfEA8rE",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/gatos/obesidad"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para gatos Dietas Veterinarias Gastroenteric",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-03/purina-pro-plan-veterinay-diets-cat-en-gastrointestinal.png.webp?itok=59lcIiEN",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/dietas-veterinarias/gatos/gastroenterico"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Pro Plan LiveClear, Alimento que reduce alérgenos en gatos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/ProPlan-Liveclear-01.png.webp?itok=Gu_ca9HF",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/gatos/liveclear"
+  },
+  {
+    "marca": "Pro Plan",
+    "nombre": "Alimento para perros Adulto Razas Medianas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/razas-medianas-1-proplan.png.webp?itok=M7p4g4jF",
+    "fuenteUrl": "https://www.purina.com.ar/proplan/perros/adulto/razas-medianas"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Gatitos hasta 12 meses | Defense Plus",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/GATITOS%20HASTA%2012%20MESES-cat-chow-frente.png.webp?itok=zYFdKS2O",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/gatitos-hasta-12-meses"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Adultos Sabor Carne | Defense Plus",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/ADULTOS%20CARNE%20Y%20POLLO-cat-chow-frente.png.webp?itok=3uOEEfOg",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/defense-adultos-carne-pollo"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos adultos sabor pescado y pollo",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2025-06/Cat_Chow_Pescado_para_Gatos_Adultos.jpg.webp?itok=P3stLNGy",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/adultos-pescado"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Gatitos Pollo | Defense Hydro",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/gatitos_wet_cat_chow.jpg.webp?itok=IjOQ9T67",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/gatitos-pollo"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Adultos pollo | Defense Hydro",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/cat-chow-gatos-adultos-pollo-wet.jpg.webp?itok=ovzcz799",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/adultos-hydro-pollo"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos esterilizados con pescado",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/cat-chow-gatos-adultos-esterilizados-wet.jpg.webp?itok=cfiolHuL",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/esterilizados-hydro-pescado"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Adultos Pescado | Defense Hydro",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/cat-chow-gatos-adultos-pescado-wet.jpg.webp?itok=kknEZOoW",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/adultos-hydro-pescado"
+  },
+  {
+    "marca": "Cat Chow",
+    "nombre": "Alimento para gatos Esterilizados, Defense Plus",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/purina-cat-chow-esterilizados-pescado.jpg.webp?itok=NvNYYWjb",
+    "fuenteUrl": "https://www.purina.com.ar/catchow/productos/esterilizados-pescado"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perro adulto raza pequeña doble proteína",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-10/DOG%20CHOW%20Mini%20Sml%20Triple%20Protein.png.webp?itok=XpLek_BZ",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/minis-pequenos"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perros adultos raza medianos y grandes",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-10/DOG%20CHOW%20M_L%20Triple%20Protein.png.webp?itok=KSXlj027",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/medianos-grandes"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perro adulto Longevidad mayor 7 años",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2026-07/8445291920194_01.png.webp?itok=xfT5Xen1",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/adultos-mayores"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento húmedo para perros cachorros todos los tamaños",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/dog-chow-puppy-pollo-front.png.webp?itok=JQQKfq6I",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/cachorros-todos-los-tamanos-pollo"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento húmedo con pollo para perros",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/dog-chow-adulto-pollo-front.png.webp?itok=cpMqCEjC",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/adultos-todos-los-tamanos-con-pollo"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento húmedo para perro de raza pequeña sabor pollo",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/dog-chow-adultos-pequen%CC%83os-pollo-front.png.webp?itok=tYOj6NmG",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/adultos-razas-pequenas-pollo"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento húmedo para perro raza pequeña sabor salmón",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/dog-chow-adultos-mini-pequen%CC%83os-salmon-front.png.webp?itok=09BKYUNE",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/adultos-razas-pequenas-sabor-salmon"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perros Alta proteína de carne, pollo y huevo",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-07/1200x1200BultoAltaProteina.png.webp?itok=tkOpVraZ",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/productos/alta-proteina"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perro cachorro razas medianos y grandes",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-01/1200x1200_DC_Gran_Comienzo_cachorros_M%26G.png.webp?itok=90qmlRqv",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/producto/gran-comienzo-cachorros-medianos"
+  },
+  {
+    "marca": "Dog Chow",
+    "nombre": "Alimento para perro cachorro razas minis y pequeños",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/card_450px/public/2024-01/1200x1200_DC_Gran_Comienzo_cachorros_M%26P.png.webp?itok=tu2QAgTZ",
+    "fuenteUrl": "https://www.purina.com.ar/dogchow/producto/gran-comienzo-cachorros-minis"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento Excellent Gatos Adulto Castrados",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Gatos_Sterilized.png.webp?itok=naOPLR1v",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/gatos/adulto-castrados-pollo-arroz"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perros senior",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_Senior.png.webp?itok=x9257zpn",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/adulto-mayor-pollo-arroz-todo-tamanos"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perro calorias reducidas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_ReducedCalorie.png.webp?itok=Icam58BR",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/adulto-sobrepeso-pollo-arroz"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perros piel sensible Cordero",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_SkinCare_Cordero.png.webp?itok=OLA_B_JM",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/adultos-skin-care-cordero"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perros adulto mantenimiento",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_AdultMantenimiento.png.webp?itok=-ih86p5V",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/mantenimiento-adulto"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento Excellent Cachorros Razas Pequeñas",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_PuppyPequenos.png.webp?itok=gTy-KgzE",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/cachorro-pollo-arroz-razas-pequenas"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perros Puppy Cachorros",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_PuppyMedyGran.png.webp?itok=_daXvb44",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/cachorro-pollo-arroz-medianas-grandes"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perros Adulto Razas Minis y Pequeña",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_AdultPequenos.png.webp?itok=AV_VLOZp",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/adulto-pollo-arroz-minis-pequenas"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para perro adulto raza mediana y grande",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Perros_AdultMedyGran.png.webp?itok=WNaPiBbl",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/perros/adulto-pollo"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para gato gatito",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Gatos_Kitten.png.webp?itok=pH8vlLD-",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/gatos/gatitos-pollo-arroz"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para gato adulto",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Gatos_Adult.png.webp?itok=GSH6fIFj",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/gatos/adulto-pollo-arroz"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para gato cuidado urinario",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Gatos_Urinary.png.webp?itok=_53pM2DO",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/gatos/adulto-urinario-pollo-arroz"
+  },
+  {
+    "marca": "Excellent",
+    "nombre": "Alimento para gato piel sensible",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2024-03/Excellent_Gatos_SkinCare_0.png.webp?itok=tRKL7jiK",
+    "fuenteUrl": "https://www.purina.com.ar/excellent/gatos/adulto-piel-sensible-salmon"
+  },
+  {
+    "marca": "Felix",
+    "nombre": "Alimento húmedo para gatos Con Pollo e Hígado",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2026-07/7891000391433_1.png.webp?itok=frLQRq5u",
+    "fuenteUrl": "https://www.purina.com.ar/felix/productos/sensaciones-pollo-e-higado-en-salsa"
+  },
+  {
+    "marca": "Felix",
+    "nombre": "Alimento húmedo para gatos Salmón",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2026-07/7891000241080_1.png.webp?itok=ZzsLaYH6",
+    "fuenteUrl": "https://www.purina.com.ar/felix/productos/sensaciones-salmon-en-salsa"
+  },
+  {
+    "marca": "Felix",
+    "nombre": "Alimento para gatos Pescado Blanco en Salsa",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2026-07/7891000241134_1.png.webp?itok=FdYYJMje",
+    "fuenteUrl": "https://www.purina.com.ar/felix/productos/sensaciones-pescado-blanco-en-salsa"
+  },
+  {
+    "marca": "Felix",
+    "nombre": "Alimento para gatos Gatitos Megamix",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/CTA_felix_gatitos.jpg.webp?itok=_bB9iwQV",
+    "fuenteUrl": "https://www.purina.com.ar/felix/alimento-seco/gatitos-megamix"
+  },
+  {
+    "marca": "Felix",
+    "nombre": "Alimento para gatos Megamix Adultos",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-04/cta-felix-megamix.png.webp?itok=mZ9ZMWBv",
+    "fuenteUrl": "https://www.purina.com.ar/felix/alimento-seco/megamix-adultos"
+  },
+  {
+    "marca": "Dogui",
+    "nombre": "Alimento para Cachorros con carne pollo cereales vegetales leche",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/dogui-cachorros-con-carne-pollo-cereales-vegetalles-y-leche.jpg.webp?itok=Xq2JHjx2",
+    "fuenteUrl": "https://www.purina.com.ar/dogui/cachorro-carne-pollo-cereales"
+  },
+  {
+    "marca": "Dogui",
+    "nombre": "Alimento para perros Adultos con carne, pollo, cereales y vegetales",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-11/dogui-adultos-con-carne-pollo-cereales-y-vegetalles.jpg.webp?itok=mI_SO-b6",
+    "fuenteUrl": "https://www.purina.com.ar/dogui/adultos-con-carne-pollo"
+  },
+  {
+    "marca": "Gati",
+    "nombre": "Alimento para gatos sabor pescado y salmón a la primavera",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-01/gati_pescado_salmon_a_la_primavera.png.webp?itok=Tm5sallt",
+    "fuenteUrl": "https://www.purina.com.ar/gati/pescado-salmon-a-la-primavera"
+  },
+  {
+    "marca": "Gati",
+    "nombre": "Alimento para gatos sabor carne y pollo a la jardinera",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-01/gati_carne_pollo_a_la_jardinera.png.webp?itok=6Bohb5zo",
+    "fuenteUrl": "https://www.purina.com.ar/gati/carne-pollo-a-la-jardinera"
+  },
+  {
+    "marca": "Dentalife",
+    "nombre": "Cuidado oral diario Perro Pequeño | Dentalife Argentina",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/purina-dentalife-perro-pequenio.png.webp?itok=HE7wdPpz",
+    "fuenteUrl": "https://www.purina.com.ar/dentalife/perro-pequeno"
+  },
+  {
+    "marca": "Dentalife",
+    "nombre": "Cuidado oral diario Perro Mediano | Dentalife Argentina",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/purina-dentalife-perro-mediano.png.webp?itok=Zu198LLq",
+    "fuenteUrl": "https://www.purina.com.ar/dentalife/perro-mediano"
+  },
+  {
+    "marca": "Dentalife",
+    "nombre": "Cuidado oral diario Perro Grande | Dentalife Argentina",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2022-10/purina-dentalife-perro-grande.png.webp?itok=mV1OKweX",
+    "fuenteUrl": "https://www.purina.com.ar/dentalife/perro-grande"
+  },
+  {
+    "marca": "Tidy Cats",
+    "nombre": "Piedras Sanitarias para Gato",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/styles/webp/public/2023-10/Purina_Tidy_Cats_PSPG_0.png.webp?itok=zDHc7u4N",
+    "fuenteUrl": "https://www.purina.com.ar/tidycats/piedras-sanitarias-para-gato"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento Cachorro Todos los Tamaños Pollo y carne",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Cachorros%20Todos%20los%20Taman%CC%83os%20con%20Pollo%20y%20carne_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/perros/cachorros-pollo-carne"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento Perro Adulto Mediano y Grande Pollo y Carne",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Adultos%20Medianos%20y%20Grandes%20Pollo%20y%20Carne_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/perros/adulto-sabor-pollo-carne"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento Perro Adulto Mediano y Grande Pollo y Cordero",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Adultos%20Medianos%20y%20Grandes%20Pollo%20y%20Cordero_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/perros/adulto-sabor-pollo-cordero"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento Perro Adulto Mini y Pequeño Pollo y Carne",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Adultos%20Minis%20y%20Pequen%CC%83os%20Pollo%20y%20Carne_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/perros/adulto-mini-pollo-carne"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento Perro Adulto Mini y Pequeño Pollo y Cordero",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Adultos%20Minis%20y%20Pequen%CC%83os%20Pollo%20y%20Cordero_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/perros/adulto-mini-pollo-cordero"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento para Gatitos con Pollo y Carne",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Gatitos%20Pollo%20y%20Carne-frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/gatos/gatitos-pollo-carne"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento para gatos Adultos Pollo y carne",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/%20Gatitos%20Pollo%20y%20Carne_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/gatos/adultos-pollo-carne"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento para gatos Adultos Pollo y Salmón",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Adultos%20Pollo%20y%20Salmo%CC%81n-frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/gatos/adultos-pollo-salmon"
+  },
+  {
+    "marca": "Purina One",
+    "nombre": "Alimento para gatos Esterilizados Pollo y Salmón",
+    "presentaciones": [],
+    "imageUrl": "https://www.purina.com.ar/sites/default/files/2022-09/Esterilizados%20Pollo%20y%20Salmo%CC%81n_frente.png",
+    "fuenteUrl": "https://www.purina.com.ar/purina-one/productos/gatos/esterilizados-pollo-salmon"
+  }
+]

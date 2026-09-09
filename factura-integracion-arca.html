@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Facturación Electrónica ARCA — pullstok-erp</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    color: #1a1a1a;
+    font-size: 12.5px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 22px;
+    color: #0f2a43;
+    border-bottom: 3px solid #0f2a43;
+    padding-bottom: 6px;
+    margin: 0 0 4px 0;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 18px 0;
+  }
+  h2 {
+    font-size: 16px;
+    color: #0f2a43;
+    margin: 22px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid #cbd5e1;
+  }
+  h3 { font-size: 13.5px; color: #1e40af; margin: 14px 0 6px 0; }
+  p { margin: 6px 0; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px 0;
+    font-size: 12px;
+  }
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 5px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #eef2f7; font-weight: 600; color: #0f2a43; }
+  code { font-family: "Cascadia Code", Consolas, monospace; font-size: 11.5px; padding: 1px 4px; background: #f3f4f6; border-radius: 3px; }
+  .box {
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #0f2a43;
+    background: #f8fafc;
+    padding: 10px 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+  }
+  .box-warn {
+    border-left-color: #d97706;
+    background: #fffbeb;
+  }
+  .box-info {
+    border-left-color: #2563eb;
+    background: #eff6ff;
+  }
+  .flow {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 11px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 10px 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 8px 0;
+  }
+  .flow b { color: #7dd3fc; }
+  strong { color: #0f2a43; }
+  .pagebreak { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>Sistema de Facturación Electrónica ARCA</h1>
+<p class="subtitle">pullstok-erp · Backend (Express + Prisma) + Frontend (React/Vite) · Mapa del flujo completo</p>
+
+<div class="box box-info">
+<strong>La clave:</strong> la facturación tiene <strong>DOS números distintos</strong> que conviene no confundir. El interno (FAC-XXXX) es de trazabilidad del sistema y no tiene valor fiscal. El fiscal (0002-00000008) es el real, otorgado por ARCA.
+</div>
+
+<h2>1. Los dos números</h2>
+<table>
+  <tr><th>Número</th><th>Qué es</th><th>Quién lo genera</th></tr>
+  <tr><td><code>FAC-0001</code></td><td>Referencia <strong>interna</strong> del sistema (trazabilidad, antes de ser fiscal)</td><td>Contador por organización (<code>Counter</code>)</td></tr>
+  <tr><td><code>0002-00000008</code></td><td>Número <strong>fiscal</strong> real (punto de venta 4 díg + comprobante 8 díg)</td><td>ARCA / <code>ArcaSequence</code></td></tr>
+</table>
+<p>La factura nace como <code>FAC-XXXX</code> (sin valor fiscal). Recién cuando se emite contra ARCA se le asigna el número fiscal + CAE.</p>
+
+<h2>2. La integración ARCA (capa SOAP) — <code>api/src/integrations/arca/</code></h2>
+<p>Capa que habla con AFIP/ARCA por SOAP, inyectable y mockeable (por eso se prueba sin red).</p>
+<table>
+  <tr><th>Archivo</th><th>Qué hace</th></tr>
+  <tr><td><code>types.ts</code></td><td>Dominios: <code>ArcaEnvironment</code> (HOMOLOGACION/PRODUCCION), <code>ArcaAuthContext</code>, <code>CaeRequest/CaeResult</code>, interface <code>ArcaClient</code>, códigos de error.</td></tr>
+  <tr><td><code>soapClient.ts</code></td><td>Transporte SOAP: arma el envelope, POST con <code>SOAPAction</code>, timeout y 1 retry. Parse con fast-xml-parser.</td></tr>
+  <tr><td><code>traSigner.ts</code></td><td>Arma el <strong>TRA</strong> (Ticket de Requerimiento de Acceso) y lo firma con CMS/PKCS#7 (node-forge, SHA-1). Gotcha: fechas sin milisegundos y en hora Buenos Aires con skew de 2 min.</td></tr>
+  <tr><td><code>wsaaClient.ts</code></td><td><code>authenticateWsaa()</code>: LoginCms → Ticket de Acceso (TA). Cacheado 12hs en memoria. OJO: <code>LoginCmsReturn</code> es XML plano, no base64 (bug ya arreglado).</td></tr>
+  <tr><td><code>wsfev1Client.ts</code></td><td>Corazón de emisión: <code>fecaeSolicitar</code> (pedir CAE), <code>feCompUltimoAutorizado</code> (último número), <code>feCompConsultar</code>.</td></tr>
+  <tr><td><code>padronClient.ts</code></td><td><code>getPersona()</code>: padrón A4 (autocompletar clientes). Endpoint nuevo de ARCA, anida en <code>personaReturn.persona</code>.</td></tr>
+  <tr><td><code>arcaClient.ts</code></td><td>Junta WSAA + WSFEv1 en la interface <code>ArcaClient</code>.</td></tr>
+  <tr><td><code>mockArcaClient.ts</code></td><td>Versión de memoria para tests/e2e sin red.</td></tr>
+</table>
+
+<h3>Ambientes</h3>
+<p>Se resuelven según <code>ArcaSetting.environment</code> (default: HOMOLOGACION):</p>
+<ul>
+  <li>HOMOLOGACION → <code>https://wswhomo.afip.gov.ar/wsfev1/service.asmx</code></li>
+  <li>PRODUCCION → <code>https://servicios1.afip.gov.ar/wsfev1/service.asmx</code></li>
+</ul>
+
+<h2>3. El orquestador de emisión — <code>api/src/services/fiscalInvoiceService.ts</code></h2>
+<p>Dirige la emisión fiscal.</p>
+<ul>
+  <li><code>emitirFiscalmente(invoiceId, client, ctx)</code> — emite una factura <code>ISSUED</code> interna aún sin CAE.</li>
+  <li><code>reintentarFiscalmente(invoiceId, client, ctx)</code> — reintenta desde <code>PENDING_CAE</code> reutilizando el mismo <code>cbteNro</code>.</li>
+  <li><code>emitirCore(...)</code> — el corazón:
+    <ol>
+      <li>Decide Factura A vs B (<code>deriveReceptorFiscal</code>): CUIT válido → A, DNI/sin CUIT → B, CUIT inválido → bloqueado.</li>
+      <li>Reserva el correlativo (<code>cbteNro</code>).</li>
+      <li>Marca <code>PENDING_CAE</code> + guarda campos fiscales (transacción corta).</li>
+      <li>Pide el CAE a ARCA (<strong>fuera</strong> de la transacción).</li>
+      <li>Si ARCA dice "ya registrado" → consulta para recuperar el CAE.</li>
+      <li>Si falla → queda <code>PENDING_CAE</code> con código de error y contador.</li>
+      <li>Si va bien → <code>ISSUED</code> con CAE + vencimiento.</li>
+    </ol>
+  </li>
+</ul>
+
+<h3>Estados de la factura</h3>
+<div class="flow">DRAFT ──issue()──▶ <b>ISSUED</b> (interna, sin CAE)
+       ──emitirFiscalmente──▶ <b>PENDING_CAE</b> (reservando número)
+       ──FECAESolicitar──▶ <b>ISSUED</b> (con CAE)
+       fallo ──▶ PENDING_CAE (reintento, mismo cbteNro)</div>
+
+<h2>4. El cálculo fiscal — <code>api/src/services/arcaCalc.ts</code></h2>
+<ul>
+  <li>Decide A vs B (<code>normalizeCuit</code>, <code>isValidCuit</code>, <code>deriveReceptorFiscal</code>).</li>
+  <li>Mapea la alícuota interna al ID de ARCA (<code>mapAlicuotaId</code>: 21→5, 10.5→4, etc.).</li>
+  <li><code>calcArcaAmounts</code> calcula montos en <strong>centavos enteros</strong> (evita errores de redondeo).</li>
+</ul>
+
+<h2>5. Controllers y el gate</h2>
+<table>
+  <tr><th>Archivo</th><th>Qué hace</th></tr>
+  <tr><td><code>invoiceController.ts</code></td><td>CRUD de facturas + transiciones: <code>issueInvoice</code> (DRAFT→ISSUED), <code>issueFiscal</code>, <code>retryFiscal</code>, <code>markAsPaid</code>, <code>cancelInvoice</code>.</td></tr>
+  <tr><td><code>arcaSettingsController.ts</code></td><td>GET/PUT de configuración ARCA (solo ADMIN) + <code>getArcaEnabled</code>.</td></tr>
+  <tr><td><code>padronController.ts</code></td><td><code>getPadronByCuit</code> (autocompletar cliente).</td></tr>
+  <tr><td><code>checkArcaEnabled.ts</code></td><td>Gate: si la org no tiene ARCA configurado → <code>403 ARCA_NOT_AVAILABLE</code>. Valida enabled + cuitEmisor + puntoVenta + certPath + keyPath.</td></tr>
+</table>
+
+<h2>6. Multi-tenant (organización)</h2>
+<ul>
+  <li>El cliente extendido de Prisma <strong>inyecta automáticamente <code>organizationId</code></strong> en todos los modelos de tenant (Invoice, Product, Customer...).</li>
+  <li><code>ArcaSetting</code>, <code>ArcaSequence</code> y <code>Counter</code> están <strong>fuera</strong> del scope automático: se acceden explícitamente por <code>organizationId</code> vía <code>basePrisma</code> (evita fugas entre organizaciones).</li>
+  <li>Los <strong>certificados nunca van en la BD</strong>: solo <code>certPath</code>/<code>keyPath</code> en el VPS (<code>/var/www/pullstok/certs/{org}/...crt</code>/<code>.key</code>).</li>
+</ul>
+
+<div class="pagebreak"></div>
+
+<h2>7. El frontend</h2>
+<table>
+  <tr><th>Archivo</th><th>Qué hace</th></tr>
+  <tr><td><code>views/Invoices.tsx</code></td><td>Listado. Arma el <code>InvoicePdfData</code> (<code>buildExport</code>) y dispara <code>window.print()</code>.</td></tr>
+  <tr><td><code>views/InvoiceDetail.tsx</code></td><td>Detalle (solo lectura). <code>PrintInvoice</code> siempre montado; el botón Imprimir llama <code>window.print()</code>.</td></tr>
+  <tr><td><code>components/molecules/PrintInvoice</code></td><td>Comprobante imprimible. Recibe <code>InvoicePdfData</code>, montado <code>hidden print:block</code>. Partes: franja ORIGINAL → header (recuadro de letra + emisor/comprobante) → cliente → tabla de ítems (se estira con <code>flex:1</code>) → totales → footer ARCA (QR + CAE).</td></tr>
+  <tr><td><code>hooks/useInvoices.ts</code></td><td>Data-fetching (query + mutations que refrescan la lista).</td></tr>
+  <tr><td><code>hooks/useBranding.ts</code></td><td>Logo de la org (<code>app-branding</code>).</td></tr>
+  <tr><td><code>hooks/useAfipQrImage.ts</code></td><td>Genera el QR como PNG para el <code>PrintInvoice</code> (canvas).</td></tr>
+  <tr><td><code>utils/exportToPDF.ts</code></td><td>Tipo <code>InvoicePdfData</code>/<code>InvoicePdfIssuer</code> + <code>exportToPDF</code> legacy (jsPDF).</td></tr>
+  <tr><td><code>utils/afipQr.ts</code></td><td>Payload base64 + URL <code>https://www.afip.gob.ar/fe/qr/?p=...</code> (RG 4892/2020).</td></tr>
+  <tr><td><code>OrganizationFiscalForm</code></td><td>Form de datos fiscales del emisor (CUIT, condición IVA, dirección, Ingresos Brutos, Inicio de Actividades).</td></tr>
+  <tr><td><code>index.css</code></td><td><code>@page { size: A4; margin: 12mm }</code> + <code>@media print</code> (oculta todo, muestra solo <code>.print-area</code>).</td></tr>
+</table>
+
+<div class="box box-warn">
+<strong>OJO:</strong> hay <strong>dos motores de QR</strong> — jsPDF (<code>drawAfipQr</code>) para el export y canvas (<code>generateAfipQrDataUrl</code>) para el <code>PrintInvoice</code>. Misma lógica, dos implementaciones.
+</div>
+
+<h2>8. Flujo completo de emisión</h2>
+<div class="flow">1. Front: useConfirm → issueInvoice(id) → PUT /api/invoices/:id/issue
+2. Backend: marca ISSUED interna con número FAC-XXXX
+3. Si ARCA configurado:
+   - reserva cbteNro (→ PENDING_CAE)
+   - pide CAE a ARCA
+   - OK → ISSUED con CAE
+   - falla → PENDING_CAE + fiscalError (botón reintentar)
+4. Si NO hay ARCA → ISSUED interna SIN CAE (no fiscal)</div>
+
+<h2>9. Flujo de impresión</h2>
+<div class="flow">1. Click "Imprimir" (listado o detalle)
+2. Se monta &lt;PrintInvoice {datos} /&gt; (hidden print:block)
+3. window.print() → diálogo del navegador
+4. CSS @media print oculta el resto y muestra solo .print-area
+5. Navegador imprime/exporta a PDF el comprobante
+   (con QR + CAE si está emitida; si no → "no válido como factura ARCA")</div>
+
+<h2>10. Gotchas que conviene conocer</h2>
+<ul>
+  <li><strong>Carrera de correlativo</strong>: <code>getLastInvoiceNumber</code> corre fuera de transacción. Si dos emiten a la vez, pueden obtener el mismo <code>cbteNro</code> y ARCA responde "ya registrado" → el código consulta el CAE... <em>que es el de la otra factura</em> (edge case real de concurrencia).</li>
+  <li><strong>Condición IVA del receptor con DNI</strong> hardcodeada a 5 (Consumidor Final) aunque por norma podría ser RI.</li>
+  <li>El <code>issue</code> devuelve <strong>200 con <code>fiscalError</code> adjunto</strong> cuando la emisión fiscal falla (en vez de 500) — el front lo interpreta para mostrar toast distinto.</li>
+  <li>El <strong>padrón en homologación solo acepta los CUITs de prueba de AFIP</strong>; los reales dan "No existe persona" hasta que ARCA habilite producción (ticket 46924530).</li>
+</ul>
+
+<h2>11. Bug conocido: LoginCms WSAA</h2>
+<p>El <code>LoginCmsReturn</code> de WSAA <strong>no contiene base64</strong> del TA — contiene el XML del TA en texto plano escapado dentro del SOAP. El parser lo des-escapaba a string plano. La estructura interna del TicketAcceso es <code>loginTicketResponse</code> con <code>&lt;header&gt;</code> (source/destination/uniqueId/generationTime/expirationTime) y <code>&lt;credentials&gt;</code> (token/sign).</p>
+
+</body>
+</html>
