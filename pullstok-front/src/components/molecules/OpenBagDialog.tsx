@@ -198,7 +198,7 @@ export const OpenBagDialog = ({
 
           {/* Cell selection */}
           <div className="space-y-2">
-            <Label htmlFor="cell-select" className="text-sm font-medium" disabled={!scannedProduct}>
+            <Label htmlFor="cell-select" className="text-sm font-medium">
               Celda destino
             </Label>
             <NativeSelect

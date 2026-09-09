@@ -22,6 +22,7 @@ interface NativeSelectProps {
   id?: string;
   ariaLabel?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 // "(pointer: coarse)" matches touch primary input (phones/tablets). It is the
@@ -43,6 +44,7 @@ export const NativeSelect = ({
   id,
   ariaLabel,
   className,
+  disabled,
 }: NativeSelectProps) => {
   const [isTouch, setIsTouch] = useState(getTouch);
 
@@ -60,7 +62,7 @@ export const NativeSelect = ({
   // (e.g. the variants "—" placeholder), so a "" option is shown as-is.
   if (!isTouch) {
     return (
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
         <SelectTrigger
           id={id}
           aria-label={ariaLabel}
@@ -90,6 +92,7 @@ export const NativeSelect = ({
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
+        disabled={disabled}
         className="h-9 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 text-sm whitespace-nowrap shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:bg-input/30 dark:ring-destructive/40"
       >
         {placeholder && !options.some((o) => o.value === "") && (
