@@ -524,7 +524,7 @@ function isHeaderLine(line: string): boolean {
   if (/^(TALLA|GAMA|TIPO)\s/i.test(t)) return true;
   if (/CÓD\.?\s+DESCRIPCIÓN/i.test(t)) return true;
   if (/Descripcion\s+Producto/i.test(t)) return true;
-  if (/^(SIN IVA|CON IVA)$/i.test(t)) return true;
+  if (/^\(?(SIN IVA|CON IVA)\)?$/i.test(t)) return true;
   if (/^PRECIO\b/i.test(t)) return true;
   if (/^(PUBLICO|PÚBLICO|AL\s+PÚBLICO)/i.test(t)) return true;
   if (/^KG\s*x\s*U\./i.test(t)) return true;
@@ -603,6 +603,42 @@ function parseDataRow(
   };
 }
 
+/** Infer the product line (etapa/gama) from its name, as the PRIMARY source of
+ * the line (not a fallback) — robust against hierarchy-state leakage between
+ * sections (Eukanuba page 1 then Royal Canin pages 2-7).
+ *
+ * Eukanuba: PUPPY / ADULT / SENIOR / FIT BODY / LAMB / KITTEN / GATO.
+ * Royal Canin: FELINE / CANINE / SIZE (mini/medium/maxi/giant/x-small) /
+ * VETERINARY (feline/canine). */
+function inferLineaFromName(nombre: string): string | null {
+  const upper = nombre.toUpperCase();
+
+  // Royal Canin / otros proveedores (no Eukanuba)
+  if (!/EUKANUBA/i.test(nombre)) {
+    // VETERINARY toma prioridad sobre CANINE/FELINE
+    if (/VETERINARY/i.test(upper)) return /CANINE/i.test(upper) ? "VETERINARY CANINE" : "VETERINARY FELINE";
+    // Tamaño (SIZE) antes que gama, para "SIZE HEALTH NUTRITION" (mini/medio/maxi/giant)
+    if (/\bMINI\b/i.test(upper)) return "SIZE MINI";
+    if (/\bMEDIUM\b/i.test(upper)) return "SIZE MEDIUM";
+    if (/\bMAXI\b/i.test(upper)) return "SIZE MAXI";
+    if (/\bGIANT\b/i.test(upper)) return "SIZE GIANT";
+    if (/X-SMALL/i.test(upper)) return "SIZE X-SMALL";
+    // Palabras clave de gato (FELINE) — Babycat, Kitten, Indoor, Instinctive,
+    // Sensory, Pouch, Lata, etc. son líneas Feline del Royal Canin.
+    if (/FELINE/i.test(upper)) return "FELINE";
+    if (/CANINE/i.test(upper)) return "CANINE";
+    // Palabras clave de gato (FELINE) — líneas Feline del Royal Canin.
+    if (/\b(BABYCAT|KITTEN|INSTINCTIVE|SENSORY|INDOOR|EXIGENT|SENSIBLE|PERSIAN|SIAMESE|LIGHT WEIGHT|DIGEST|APPETITE|HAIR|WEIGHT CARE|URINARY SO|SATIETY|RECOVERY|RENAL|HEPATIC|MOBILITY|CARDIAC|CALM|DIABETIC|ALLERGENIC|ANALLERGENIC|HYPOALLERGENIC|GASTRO|FIBRE|STARTER|MOTHER|FIT\b|ACTIVE|GC\b|MATURE CONSULT|NEUTERED BALANCE|HAIRBALL|URINARY CARE)\b/i.test(upper)) return "FELINE";
+    // Palabras clave de perro (CANINE) — líneas Canine (razas, tamaño).
+    if (/\b(PUPPY|ADULT|SENIOR|AGEING|CLUB|PROTECH|STARTER|DERMACOMFORT|CANINE|POODLE|YORKSHIRE|DACHSHUND|CHIHUAHUA|BULLDOG|JACK|OV|LABRADOR|BOXER|GOLDEN|CANICHE|SCHNAUZER|PUG|X-SMALL|X- SMALL|SIZE|MEDIUM|MAXI|GIANT)\b/i.test(upper)) return "CANINE";
+    return "ROYAL CANIN";
+  }
+
+  // Eukanuba: etapa del nombre
+  const m = upper.match(/\b(PUPPY|ADULT|ADULTO|SENIOR|FIT BODY|PREMIUM PERFORMANCE|LAMB|KITTEN|GATOADULTO)\b/);
+  return m ? m[1] : "EUKANUBA";
+}
+
 /** Main entry: parse any supported provider's price list. */
 export function parsePriceList(text: string, detected?: DetectedLayout): ParsedPriceList {
   const layoutInfo = detected ?? detectProviderLayout(text);
@@ -646,17 +682,21 @@ export function parsePriceList(text: string, detected?: DetectedLayout): ParsedP
       if (nombre) lastNombre = nombre;
 
       // Inferir marca real del nombre (el PDF mezcla Eukanuba y Royal Canin).
-      // "EUKANUBA ..." → EUKANUBA; el resto (páginas 2-7) → ROYAL CANIN.
+      // Regla simple y robusta: si el nombre contiene EUKANUBA → EUKANUBA,
+      // sino → ROYAL CANIN (páginas 2-7 son Royal Canin u otros proveedores).
       const marcaInferida = /EUKANUBA/i.test(nombre)
         ? "EUKANUBA"
-        : config.provider === "eukanuba" && /^(BABYCAT|MOTHER|KITTEN|INSTINCTIVE|SENSORY|FELINE|CANINE|SIZE|MINI|MEDIUM|MAXI|GIANT|SATIETY|URINARY|DERMATOLOGY|GASTROINTESTINAL|VETERINARY|HEALTH|NUTRITION|MILK|FIT|INDOOR|EXIGENT|SENSIBLE|WEIGHT|HAIR|DIGESTIVE|RENAL|HEPATIC|CARDIAC|MOBILITY|CALM|RECOVERY|PERSIAN|POODLE|YORKSHIRE|DACHSHUND|CHIHUAHUA|JACK|BULLDOG|OV|LABRADOR|BOXER|GOLDEN|CANICHE|SCHNAUZER|PUG|MINI|X-SMALL|CLUB|PROTECH)/i.test(nombre)
-          ? "ROYAL CANIN"
-          : config.hierarchyRules.impliedBrand ?? null;
+        : "ROYAL CANIN";
+
+      // Inferir línea del nombre como fuente PRIMARIA (evita herencia de
+      // jerarquía entre secciones). Fallback a currentLinea si el nombre no
+      // permite inferirla.
+      const lineaInferida = inferLineaFromName(nombre) ?? currentLinea;
 
       rows.push({
         nombre,
         marca: parsed.marca ?? marcaInferida ?? currentMarca,
-        linea: currentLinea,
+        linea: lineaInferida,
         sublinea: currentSublinea,
         gama: parsed.gama ?? currentGama,
         tipo: parsed.tipo ?? currentTipo,
@@ -670,6 +710,20 @@ export function parsePriceList(text: string, detected?: DetectedLayout): ParsedP
 
     // Otherwise, treat as hierarchy / section marker (no prices, no code)
     if (line && !/^\d{5,}/.test(line)) {
+      const upper = line.toUpperCase();
+      // GAMAs del Royal Canin (FELINE/CANINE/SIZE/VETERINARY) → línea
+      if (/(FELINE|CANINE|VETERINARY|SIZE HEALTH|HEALTH NUTRITION)/i.test(line) && !/^\d/.test(line)) {
+        currentLinea = line;
+        currentGama = line;
+        currentSublinea = null;
+        continue;
+      }
+      // Etapas de Eukanuba (PUPPY/ADULT/SENIOR/FIT BODY) → línea
+      if (/^(PUPPY|ADULT|ADULTO|SENIOR|FIT BODY|PREMIUM PERFORMANCE|LAMB|KITTEN|GATO)/i.test(upper)) {
+        currentLinea = line;
+        currentSublinea = null;
+        continue;
+      }
       if (/^[A-ZÑ0-9][A-ZÑ0-9 &.()+'-]*$/.test(line) && /[A-ZÑ]/.test(line)) {
         // ALL-CAPS label → sublinea/tipo
         currentSublinea = line;

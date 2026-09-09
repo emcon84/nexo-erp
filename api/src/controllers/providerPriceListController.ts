@@ -350,6 +350,17 @@ async function syncHqStockInline(
  * en el PriceListEntry.suggestedPrice de la planilla recreada (así la planilla
  * impresa muestra el ajuste). Sin ajuste (coincide o null) → se recalcula.
  */
+/**
+ * Precio de venta a usar para product.price: el precio UNITARIO SIN IVA de la
+ * planilla (lo que el negocio paga al proveedor). Fallback a Con IVA solo si la
+ * planilla no trae Sin IVA (algunas filas de página 7 solo tienen Con IVA).
+ */
+const resolveSalePrice = (sinIva: number | null | undefined, conIva: number | null | undefined): number | null => {
+  if (sinIva != null) return round2(sinIva);
+  if (conIva != null) return round2(conIva);
+  return null;
+};
+
 async function applyPriceListCore(
   organizationId: string,
   body: {
@@ -518,7 +529,7 @@ async function applyPriceListCore(
         const product = await tx.product.create({
           data: {
             name: normalizeProductName(r.nombre),
-            price: roundBolsaPriceIfHigh(round2(r.precioConIva)),
+            price: roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva) ?? 0),
             quantity: 0,
             categoryId: null,
             organizationId,
@@ -592,8 +603,8 @@ async function applyPriceListCore(
           currentSuggestedById.get(productId),
         ),
       };
-      if (applyPrices && r.precioConIva != null) {
-        data.price = roundBolsaPriceIfHigh(round2(r.precioConIva));
+      if (applyPrices && (r.precioSinIva != null || r.precioConIva != null)) {
+        data.price = roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva)!);
         priceUpdated++;
       }
       if (rowTouchesProducts(r)) {
