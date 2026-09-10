@@ -94,6 +94,15 @@ const loadLogo = async (
 
 const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [number, number, number] };
 
+/** Margen al público: el Sugerido se deriva del Precio mayorista × este factor. */
+const SUGERIDO_FACTOR = 1.3334;
+
+/** Sugerido = Precio mayorista (con el +15% de RC si aplica) × margen al público. */
+const publico = (sinIva: number | null | undefined, brand?: string | null): number | null => {
+  const mayorista = precioMayorista(sinIva, brand);
+  return mayorista == null ? null : redondearPrecio(Math.round(mayorista * SUGERIDO_FACTOR * 100) / 100);
+};
+
 interface GroupRow {
   content: string | number;
   colSpan?: number;
@@ -211,7 +220,7 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
               displayName(p.e.name, p.brand),
               p.e.unit ?? "-",
               formatPrice(precioMayorista(p.e.priceSinIva, p.brand)),
-              formatPrice(redondearPrecio(p.e.suggestedPrice)),
+              formatPrice(publico(p.e.priceSinIva, p.brand)),
             ] as unknown as GroupRow[]);
           }
         }
