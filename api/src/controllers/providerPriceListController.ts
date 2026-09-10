@@ -85,24 +85,26 @@ interface SectionGroup {
  * (WET, D9) → una sola sección plana.
  */
 export function buildSections(rows: ApplyDecision[]): SectionGroup[] {
-  const sections: SectionGroup[] = [];
-  let current: SectionGroup | null = null;
-  let currentKey = "";
+  // Fusiona por (marca|línea|sublínea): el PDF repite grupos no consecutivos,
+  // y la versión anterior creaba una sección cada vez que cambiaba la clave →
+  // "ROYAL CANIN · FELINE · RAZAS PEQUEÑAS" aparecía varias veces. Con el Map
+  // por clave se consolida todo bajo UNA sección (orden de primera aparición).
+  const byKey = new Map<string, SectionGroup>();
   for (const r of rows) {
     const key = `${r.marca ?? ""}\u0000${r.linea ?? ""}\u0000${r.sublinea ?? ""}`;
-    if (!current || key !== currentKey) {
-      current = {
+    let section = byKey.get(key);
+    if (!section) {
+      section = {
         brand: r.marca ?? null,
         line: r.linea ?? null,
         subline: r.sublinea ?? null,
         entries: [],
       };
-      sections.push(current);
-      currentKey = key;
+      byKey.set(key, section);
     }
-    current.entries.push(r);
+    section.entries.push(r);
   }
-  return sections;
+  return [...byKey.values()];
 }
 
 /**

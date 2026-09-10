@@ -84,16 +84,17 @@ describe("groupByPdfHierarchy — jerarquía del PDF para la planilla mayorista"
     id: string,
     position: number,
     entries: { position: number; name: string }[],
+    line: string | null = null,
     brand: string | null = "SIEGER",
-  ) => ({ id, brand, line: null, subline: null, position, entries });
+  ) => ({ id, brand, line, subline: null, position, entries });
 
   it("ordena secciones por position y entradas por position", () => {
     const sections = [
       section("s2", 1, [
         { position: 1, name: "B" },
         { position: 0, name: "A" },
-      ]),
-      section("s1", 0, [{ position: 0, name: "X" }]),
+      ], "L2"),
+      section("s1", 0, [{ position: 0, name: "X" }], "L1"),
     ];
     const result = groupByPdfHierarchy(sections);
     expect(result.map((s) => s.id)).toEqual(["s1", "s2"]);
@@ -102,12 +103,26 @@ describe("groupByPdfHierarchy — jerarquía del PDF para la planilla mayorista"
 
   it("descarta secciones sin entradas", () => {
     const sections = [
-      section("s-vacia", 0, []),
-      section("s-ok", 1, [{ position: 0, name: "A" }]),
+      section("s-vacia", 0, [], "L-vacia"),
+      section("s-ok", 1, [{ position: 0, name: "A" }], "L-ok"),
     ];
     const result = groupByPdfHierarchy(sections);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("s-ok");
+  });
+
+  it("fusiona secciones con la misma marca|línea|sublínea (PDF repite grupos)", () => {
+    const sections = [
+      section("s1", 0, [{ position: 0, name: "A" }], "GI", "ROYAL CANIN"),
+      { id: "s2", brand: "ROYAL CANIN", line: "FELINE", subline: "RAZAS PEQUEÑAS", position: 3, entries: [{ position: 0, name: "B" }] },
+      section("s3", 2, [{ position: 0, name: "C" }], "GI", "ROYAL CANIN"),
+    ];
+    const result = groupByPdfHierarchy(sections);
+    // s1 y s3 comparten (ROYAL CANIN, GI, null) → se unen; s2 queda aparte.
+    expect(result).toHaveLength(2);
+    const merged = result.find((s) => s.line === "GI")!;
+    expect(merged.entries.map((e) => e.name)).toEqual(["A", "C"]);
+    expect(merged.position).toBe(0);
   });
 
   it("conserva la jerarquía brand/line/subline de cada sección", () => {

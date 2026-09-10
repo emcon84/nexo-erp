@@ -198,19 +198,30 @@ export interface PdfHierarchySection<T> {
 
 /**
  * Normaliza la jerarquía del PDF para impresión/render: ordena secciones por
- * position y entradas por position, y descarta secciones sin entradas. La API
- * (GET /price-lists/:id) YA devuelve la jerarquía agrupada en orden; este
- * helper garantiza el orden y limpia secciones vacías sin reinventar el
- * agrupamiento (decisión del design: no reagrupar en el front).
+ * position y entradas por position, y descarta secciones sin entradas. Además
+ * FUSIONA secciones con la MISMA (marca|línea|sublínea) en una sola, porque el
+ * PDF repite grupos no consecutivos y eso generaba el mismo encabezado varias
+ * veces (ej. "ROYAL CANIN · FELINE · RAZAS PEQUEÑAS" repetido). Usa la primera
+ * aparición como posición del grupo consolidado.
  */
 export function groupByPdfHierarchy<T extends { position: number }>(
   sections: PdfHierarchySection<T>[],
 ): PdfHierarchySection<T>[] {
-  return [...sections]
+  const byKey = new Map<string, PdfHierarchySection<T>>();
+  for (const s of sections) {
+    if (s.entries.length === 0) continue;
+    const key = `${s.brand ?? ""}\u0000${s.line ?? ""}\u0000${s.subline ?? ""}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.entries.push(...s.entries);
+    } else {
+      byKey.set(key, { ...s, entries: [...s.entries] });
+    }
+  }
+  return [...byKey.values()]
     .map((s) => ({
       ...s,
       entries: [...s.entries].sort((a, b) => a.position - b.position),
     }))
-    .sort((a, b) => a.position - b.position)
-    .filter((s) => s.entries.length > 0);
+    .sort((a, b) => a.position - b.position);
 }
