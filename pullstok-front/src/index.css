@@ -199,6 +199,18 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  /* Título + tabla de la sección se mantienen juntos (evita títulos sueltos
+     en una hoja con los productos en la siguiente). */
+  .print-area .print-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* El encabezado de la sección nunca queda como último elemento de una hoja:
+     si no entra con su tabla, va a la siguiente hoja junta. */
+  .print-area h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
   /* Páginas en blanco: el resto del contenido queda oculto con visibility pero
      SIGUE ocupando altura (la planilla en pantalla es larga). Se colapsa #root
      a 0 con overflow hidden; el área imprimible es position:absolute (su
