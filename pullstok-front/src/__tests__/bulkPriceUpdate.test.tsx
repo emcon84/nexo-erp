@@ -24,12 +24,18 @@ vi.mock("@/services/productService", () => ({
   bulkPriceUpdate: vi.fn(),
 }));
 
+vi.mock("@/utils/exportBulkPricePdf", () => ({
+  exportBulkPricePdf: vi.fn().mockResolvedValue("actualizacion_precios.pdf"),
+}));
+
 import { BulkPriceUpdate } from "@/views/BulkPriceUpdate";
 import { bulkPriceUpdate } from "@/services/productService";
+import { exportBulkPricePdf } from "@/utils/exportBulkPricePdf";
 import { getCategories } from "@/services/onboardingService";
 
 const mockBulkPriceUpdate = vi.mocked(bulkPriceUpdate);
 const mockGetCategories = vi.mocked(getCategories);
+const mockExportPdf = vi.mocked(exportBulkPricePdf);
 
 const brands = [
   { id: "b-1", value: "Acme" },
@@ -310,7 +316,7 @@ describe("BulkPriceUpdate — preview, exclusions and apply", () => {
     );
   });
 
-  it("prints the FULL preview set with all=true and shows the print area", async () => {
+  it("generate the PDF with the FULL preview set (all=true)", async () => {
     const allPreview = {
       affected: 3,
       previousTotal: 300,
@@ -333,8 +339,6 @@ describe("BulkPriceUpdate — preview, exclusions and apply", () => {
       ],
     };
     mockBulkPriceUpdate.mockResolvedValueOnce(page1).mockResolvedValueOnce(allPreview);
-    const printSpy = vi.fn();
-    window.print = printSpy;
 
     renderView();
     await selectBrandAndPercent();
@@ -351,9 +355,14 @@ describe("BulkPriceUpdate — preview, exclusions and apply", () => {
         true,
       ),
     );
-    // El área print se monta con el set completo (incluye la fila de la página 2).
-    expect(await screen.findByText("Producto 3")).toBeInTheDocument();
-    expect(printSpy).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mockExportPdf).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "Producto 1" }),
+          expect.objectContaining({ name: "Producto 3" }),
+        ]),
+      ),
+    );
   });
 
   it("hides the print button until a preview exists", () => {

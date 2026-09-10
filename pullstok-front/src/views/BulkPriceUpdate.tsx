@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { CategoryTreePickerMulti } from "@/components/molecules/CategoryTreePickerMulti";
 import { CategoryOverridesPanel } from "@/components/molecules/CategoryOverridesPanel";
-import { PrintBulkPriceList } from "@/components/molecules/PrintBulkPriceList";
+import { exportBulkPricePdf } from "@/utils/exportBulkPricePdf";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,6 @@ import { listProviders, type Provider } from "@/services/providers";
 import {
   bulkPriceUpdate,
   BulkPricePreview,
-  BulkPricePreviewRow,
   BulkPriceUpdatePayload,
 } from "@/services/productService";
 import { API_URL } from "@/constants";
@@ -158,7 +157,6 @@ export const BulkPriceUpdate = () => {
     [],
   );
   const [preview, setPreview] = useState<BulkPricePreview | null>(null);
-  const [printRows, setPrintRows] = useState<BulkPricePreviewRow[] | null>(null);
   // Búsqueda client-side sobre las filas de la página de la vista previa
   // (solo análisis en pantalla; no cambia el alcance del apply).
   const [previewSearch, setPreviewSearch] = useState("");
@@ -486,33 +484,24 @@ export const BulkPriceUpdate = () => {
     setSubmitting(false);
   };
 
-  // Imprime el listado COMPLETO del preview (all=true → server devuelve todas
-  // las filas, no la página): respeta exclusiones y overrides del payload.
+  // Genera el PDF del listado COMPLETO del preview (all=true → todas las filas):
+  // respeta exclusiones y overrides del payload.
   const handlePrint = async () => {
     const p = payload();
     if (!p) return;
     setSubmitting(true);
     try {
       const data = await bulkPriceUpdate(p, true, 1, true);
-      setPrintRows((data as BulkPricePreview).rows);
+      const rows = (data as BulkPricePreview).rows;
+      const name = await exportBulkPricePdf(rows);
+      if (name) toast.success("PDF descargado");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Error al preparar impresión";
+      const message = error instanceof Error ? error.message : "Error al preparar el PDF";
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
-
-  // Una vez montado el área print (printRows no nulo), abrir el diálogo de
-  // impresión y limpiar el estado al cerrarlo (afterprint) para que un Ctrl+P
-  // posterior no reimprima un snapshot stale del preview.
-  useEffect(() => {
-    if (!printRows) return;
-    window.print();
-    const cleanup = () => setPrintRows(null);
-    window.addEventListener("afterprint", cleanup);
-    return () => window.removeEventListener("afterprint", cleanup);
-  }, [printRows]);
 
   const pct = parseFloat(percentage);
   const isNegative = !Number.isNaN(pct) && pct < 0;
@@ -1079,9 +1068,6 @@ export const BulkPriceUpdate = () => {
             Aplicar cambios
           </Button>
         </div>
-
-        {/* Print area: only visible when printing (see @media print in index.css) */}
-        {printRows && <PrintBulkPriceList rows={printRows} />}
-      </div>
+    </div>
   );
 };
