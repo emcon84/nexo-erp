@@ -12,6 +12,8 @@ import {
   formatPrice,
   esHumedito,
   displayName,
+  normalizeLine,
+  tallaOf,
   tallaFromName,
   razasOf,
   TALLA_COLORS,
@@ -51,12 +53,17 @@ const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [n
 
 /** Arma el body: SECO/HÚMEDO → marca → talla → razas → productos (con precios). */
 const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
-  // cada fila con su marca/talla/razas derivadas del nombre.
+  // cada fila con su marca/talla/razas desde la SECCIÓN de planilla (igual que
+  // la mayorista); si no hay sección, se deriva del nombre.
   const withGroups = rows.map((r) => ({
     r,
-    brand: (r.brandValues?.join(", ") || "Sin marca").trim() || "Sin marca",
-    talla: tallaFromName(r.name) ?? "",
-    razas: razasOf(r.name, null),
+    brand:
+      r.brand?.trim() ||
+      (r.brandValues?.join(", ") || "Sin marca").trim() ||
+      "Sin marca",
+    talla:
+      tallaOf(normalizeLine(r.line ?? null)) || tallaFromName(r.name) || "",
+    razas: razasOf(r.name, r.subline ?? null),
     humedo: esHumedito(r.name),
   }));
 

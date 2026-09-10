@@ -463,6 +463,11 @@ export interface BulkPricePreviewRow {
   name: string;
   categoryName: string | null;
   brandValues: string[];
+  /** Sección de planilla (marca · línea · sublínea) para agrupar el PDF igual
+   * que la planilla mayorista. Puede venir null (producto sin planilla). */
+  brand?: string | null;
+  line?: string | null;
+  subline?: string | null;
   oldPrice: number;
   newPrice: number;
   delta: number;

@@ -1493,32 +1493,67 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
       },
     });
 
-    const rows = products.map((p) => {
-      const oldPrice = Math.round(Number(p.price) * 100) / 100;
-      const effectivePercentage = resolveEffectivePercentage({
-        productId: p.id,
-        categoryId: p.categoryId ?? null,
-        parentById,
-        productPercentages: prodPctMap,
-        sectionPercentages: sectionPctMap,
-        categoryPercentages: catPctMap,
-        globalPct,
+    const rows = await (async () => {
+      // Sección de planilla de cada producto (para agrupar el PDF igual que la
+      // planilla mayorista: marca · línea · sublínea). Se toma la primera
+      // entrada de planilla matcheada del producto.
+      const sectionByProduct = new Map<
+        string,
+        { brand: string | null; line: string | null; subline: string | null }
+      >();
+      if (products.length > 0) {
+        const entries = await prisma.priceListEntry.findMany({
+          where: {
+            productId: { in: products.map((p) => p.id) },
+            section: { priceList: { organizationId } },
+          },
+          select: {
+            productId: true,
+            section: { select: { brand: true, line: true, subline: true } },
+          },
+        });
+        for (const e of entries) {
+          if (e.productId && !sectionByProduct.has(e.productId)) {
+            sectionByProduct.set(e.productId, {
+              brand: e.section.brand,
+              line: e.section.line,
+              subline: e.section.subline,
+            });
+          }
+        }
+      }
+
+      return products.map((p) => {
+        const oldPrice = Math.round(Number(p.price) * 100) / 100;
+        const effectivePercentage = resolveEffectivePercentage({
+          productId: p.id,
+          categoryId: p.categoryId ?? null,
+          parentById,
+          productPercentages: prodPctMap,
+          sectionPercentages: sectionPctMap,
+          categoryPercentages: catPctMap,
+          globalPct,
+        });
+        const effectiveMargin = resolveEffectiveMargin(p.id, sectionMarginMap, margin);
+        const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage, effectiveMargin));
+        const sec = sectionByProduct.get(p.id);
+        return {
+          id: p.id,
+          name: p.name,
+          categoryName: p.category?.name ?? null,
+          brandValues: p.variantAssignments
+            .filter((a) => a.option.variant.name === "Marca")
+            .map((a) => a.option.value),
+          brand: sec?.brand ?? null,
+          line: sec?.line ?? null,
+          subline: sec?.subline ?? null,
+          oldPrice,
+          newPrice,
+          delta: Math.round((newPrice - oldPrice) * 100) / 100,
+          effectivePercentage,
+        };
       });
-      const effectiveMargin = resolveEffectiveMargin(p.id, sectionMarginMap, margin);
-      const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage, effectiveMargin));
-      return {
-        id: p.id,
-        name: p.name,
-        categoryName: p.category?.name ?? null,
-        brandValues: p.variantAssignments
-          .filter((a) => a.option.variant.name === "Marca")
-          .map((a) => a.option.value),
-        oldPrice,
-        newPrice,
-        delta: Math.round((newPrice - oldPrice) * 100) / 100,
-        effectivePercentage,
-      };
-    });
+    })();
 
     const affected = rows.length;
     const previousTotal =
