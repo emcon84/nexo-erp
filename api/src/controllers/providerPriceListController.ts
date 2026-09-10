@@ -576,7 +576,7 @@ async function applyPriceListCore(
           data: {
             sectionId: sec.id,
             productId,
-            name: r.nombre,
+            name: normalizeProductName(r.nombre),
             unit: r.unidadEmpaque ?? null,
             priceSinIva: r.precioSinIva ?? null,
             priceConIva: r.precioConIva ?? null,

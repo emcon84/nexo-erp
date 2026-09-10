@@ -3,6 +3,7 @@ import fs from "fs";
 import { basePrisma, prisma } from "../config/db";
 import { syncHqStock } from "./stockService";
 import { recomputeForCsvImport } from "./priceLooseService";
+import { normalizeProductName } from "../utils/productName";
 
 interface ProductInput {
   name: string;
@@ -100,7 +101,7 @@ export const bulkAddProducts = async (
           }
         }
         rows.push({
-          name: cleanRow.name,
+          name: normalizeProductName(cleanRow.name ?? ""),
           price: parseFloat(cleanRow.price),
           code: cleanRow.code || undefined,
           description: cleanRow.description,

@@ -554,6 +554,25 @@ function nameHasWeight(nombre: string): boolean {
     /\bx\s*\d+([.,]\d+)?\s*(kg|kgs?|g|grs?|gr|kilo|kilos?)\b/i.test(nombre);
 }
 
+/** Códigos de línea de Royal Canin que suelen aparecer pegados tras el SKU
+ * (ej. "CW34H FCN HAIRBALL..." → "HAIRBALL..."). */
+const ROYAL_CANIN_LINE_CODES = /^(?:FCN|FHN|FBN|CCN|CHN|CBN|VHN)\s+/i;
+
+/** Limpieza de estructura del nombre parseado: quita el código de línea de
+ * Royal Canin que sigue al SKU, separa palabras compuestas pegadas del
+ * proveedor ("GATOADULTO" → "GATO ADULTO") y colapsa espacios. El case lo
+ * normaliza después `normalizeProductName` (siempre mayúsculas). */
+function cleanParseName(name: string): string {
+  return name
+    .replace(ROYAL_CANIN_LINE_CODES, "")
+    .replace(/\bGATOADULTO\b/g, "GATO ADULTO")
+    .replace(/\bGATOCACHORRO\b/g, "GATO CACHORRO")
+    .replace(/\bPERROADULTO\b/g, "PERRO ADULTO")
+    .replace(/\bPERROCACHORRO\b/g, "PERRO CACHORRO")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Parse a data row: code + description + kg + prices (regex-based, robust). */
 function parseDataRow(
   line: string,
@@ -561,13 +580,18 @@ function parseDataRow(
   const prices = extractPrices(line);
   if (!prices) return null;
 
-  // Extract code (first 5-8 digit run)
-  const codeMatch = /(\d{5,8})/.exec(line);
-  const codigo = codeMatch ? codeMatch[1] : null;
-
   // Get text before the first price
   const priceMatch = /([\d.,]+)\t\$\s*([\d.,]+)\t\$\s*$/.exec(line);
   const beforePrice = line.slice(0, priceMatch!.index).trim();
+
+  // Extract code: SKU alfanumérico de Royal Canin pegado al inicio (CW34H,
+  // DA68F, DF10W...) o run de 5-8 dígitos puros al inicio del nombre. El
+  // alfanumérico antes se escapaba y quedaba pegado al nombre del producto
+  // (bug de nombres raros). El fallback se ancla al inicio para NO matchear el
+  // precio como código cuando la fila no tiene SKU (ej. Eukanuba).
+  const alphaSku = /^([A-Z]{2}\d{2,3}[A-Z]?)\b/.exec(beforePrice);
+  const codeMatch = alphaSku ?? /^(\d{5,8})\b/.exec(beforePrice);
+  const codigo = codeMatch ? codeMatch[1] : null;
 
   // Separate prefix (gama/hierarchy before code) from description+kg (after code)
   let prefix: string | null = null;
@@ -577,6 +601,9 @@ function parseDataRow(
     prefix = beforePrice.slice(0, codeMatch.index).trim() || null;
     remaining = beforePrice.slice(codeEnd).trim();
   }
+
+  // Limpieza del nombre: quitar código de línea RC y palabras compuestas.
+  remaining = cleanParseName(remaining);
 
   // Remove kg (last number) to get description
   const kgMatch = /([\d.,]+)$/.exec(remaining);
@@ -679,10 +706,13 @@ export function parsePriceList(text: string, detected?: DetectedLayout): ParsedP
     const parsed = parseDataRow(line);
     if (parsed) {
       // Si el nombre viene vacío (fila de continuación), heredar el del producto
-      // base y reconstruir con el peso de esta fila.
+      // base y reconstruir con el peso de esta fila. OJO: lastNombre YA trae el
+      // peso de la fila anterior ("Medium Weight Care X 3 KG"); se hereda SOLO la
+      // descripción base para no componer "X 3 KG X 10 KG".
       let nombre = parsed.nombre;
       if (!nombre && lastNombre && parsed.kg) {
-        nombre = `${lastNombre} X ${normalizeWeight(parsed.kg)} KG`;
+        const base = lastNombre.replace(/\s*X\s*[\d.,]+\s*(?:kg|kgs?)\s*$/i, "");
+        nombre = `${base} X ${normalizeWeight(parsed.kg)} KG`;
       }
       if (!nombre) continue; // sin nombre y sin herencia → no es fila utilizable
       if (nombre) lastNombre = nombre;
