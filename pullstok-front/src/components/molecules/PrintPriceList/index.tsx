@@ -78,6 +78,11 @@ const headerParts = (
   return raw.filter((p, i) => i === 0 || p !== raw[i - 1]);
 };
 
+/** Detecta si un producto es alimento HÚMEDO por su nombre (POUCH, LATA,
+ * LÍQUIDO, MOUSSE, HÚMEDO/WET...). El resto se considera SECO. */
+const esHumedito = (nombre: string): boolean =>
+  /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
+
 /**
  * Área imprimible de la planilla mayorista (sdd/alican-wholesale-price-list):
  * encabezado con logo horizontal oficial, jerarquía DEL PDF (marca → línea →
@@ -88,6 +93,68 @@ const headerParts = (
 export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
   const sections = groupByPdfHierarchy(plan.sections);
 
+  // Separar alimento SECO de HÚMEDO según el nombre del producto. Se particiona
+  // cada sección del PDF en sus entradas secas y húmedas, para mostrar primero
+  // todos los secos y después todos los húmedos (manteniendo marca·línea).
+  const seco = sections.map((s) => ({
+    ...s,
+    entries: s.entries.filter((e) => !esHumedito(e.name)),
+  })).filter((s) => s.entries.length > 0);
+  const humedo = sections.map((s) => ({
+    ...s,
+    entries: s.entries.filter((e) => esHumedito(e.name)),
+  })).filter((s) => s.entries.length > 0);
+
+  const renderSections = (list: typeof sections) =>
+    list.map((section) => (
+      <div key={section.id} className="mb-6 print-block">
+        {(section.brand || section.line || section.subline) && (
+          <h3 className="mb-2 border-b pb-1 text-base font-bold uppercase">
+            {headerParts(section.brand, section.line, section.subline).join(" · ")}
+          </h3>
+        )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Producto</TableHead>
+              <TableHead className="text-right">Precio</TableHead>
+              <TableHead className="text-right">Sugerido</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {section.entries.map((entry) => {
+              const nombre = cleanProductName(
+                entry.name,
+                section.brand,
+                section.line,
+                section.subline,
+              );
+              const showUnit =
+                entry.unit && !nameAlreadyCarriesWeight(nombre, entry.unit);
+              return (
+                <TableRow key={entry.id}>
+                  <TableCell className="font-medium leading-tight">
+                    {nombre}
+                    {showUnit ? (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({entry.unit})
+                      </span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatPrice(precioMayorista(entry.priceSinIva))}
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatPrice(redondearPrecio(entry.suggestedPrice))}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    ));
+
   return (
     <div className="print-area hidden print:block" aria-hidden="true">
       <PrintHeader
@@ -95,55 +162,23 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
         subtitle={`${plan.type} · ${plan.sections.length} secciones`}
       />
 
-      {sections.map((section) => (
-        <div key={section.id} className="mb-6 print-block">
-          {(section.brand || section.line || section.subline) && (
-            <h2 className="mb-2 border-b pb-1 text-base font-bold uppercase">
-              {headerParts(section.brand, section.line, section.subline)
-                .join(" · ")}
-            </h2>
-          )}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Producto</TableHead>
-                <TableHead className="text-right">Precio</TableHead>
-                <TableHead className="text-right">Sugerido</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {section.entries.map((entry) => {
-                const nombre = cleanProductName(
-                  entry.name,
-                  section.brand,
-                  section.line,
-                  section.subline,
-                );
-                const showUnit =
-                  entry.unit && !nameAlreadyCarriesWeight(nombre, entry.unit);
-                return (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium leading-tight">
-                      {nombre}
-                      {showUnit ? (
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          ({entry.unit})
-                        </span>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {formatPrice(precioMayorista(entry.priceSinIva))}
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {formatPrice(redondearPrecio(entry.suggestedPrice))}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ))}
+      {seco.length > 0 && (
+        <>
+          <h2 className="mb-2 border-b pb-1 text-base font-bold uppercase">
+            Alimento seco
+          </h2>
+          {renderSections(seco)}
+        </>
+      )}
+
+      {humedo.length > 0 && (
+        <>
+          <h2 className="mb-2 border-b pb-1 text-base font-bold uppercase">
+            Alimento húmedo
+          </h2>
+          {renderSections(humedo)}
+        </>
+      )}
     </div>
   );
 };

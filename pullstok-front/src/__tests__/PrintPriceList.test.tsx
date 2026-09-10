@@ -77,4 +77,33 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     expect(screen.getByText("SECO · 1 secciones")).toBeInTheDocument();
     expect(screen.queryByText(/vigencia/)).not.toBeInTheDocument();
   });
+
+  it("separa alimento seco de húmedo en dos bloques", () => {
+    const planMixto: PriceListDetail = {
+      id: "pl-2",
+      provider: "ROYAL CANIN",
+      type: "SECO",
+      period: "2026-08-10",
+      sourceFilename: "planilla.pdf",
+      importedAt: "2026-08-10T10:00:00Z",
+      sections: [
+        {
+          id: "sec-1",
+          brand: "ROYAL CANIN",
+          line: "VETERINARY FELINE",
+          subline: "HEALTH",
+          position: 0,
+          entries: [
+            { id: "e1", productId: "p1", name: "GC WEIGHT CONTROL X 0.4 KG", unit: "0.4 KG", priceSinIva: 100, priceConIva: 121, suggestedPrice: 200, matched: true, position: 0 },
+            { id: "e2", productId: "p2", name: "URINARY WET POUCH X 1.02 KG", unit: "1.02 KG", priceSinIva: 120, priceConIva: 145, suggestedPrice: 240, matched: true, position: 1 },
+          ],
+        },
+      ],
+    };
+    render(<PrintPriceList plan={planMixto} />);
+    expect(screen.getByText("Alimento seco")).toBeInTheDocument();
+    expect(screen.getByText("Alimento húmedo")).toBeInTheDocument();
+    expect(screen.getByText("GC WEIGHT CONTROL X 0.4 KG")).toBeInTheDocument();
+    expect(screen.getByText("URINARY WET POUCH X 1.02 KG")).toBeInTheDocument();
+  });
 });
