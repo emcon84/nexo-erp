@@ -126,6 +126,9 @@ export const BulkPriceUpdate = () => {
   );
   const [preview, setPreview] = useState<BulkPricePreview | null>(null);
   const [printRows, setPrintRows] = useState<BulkPricePreviewRow[] | null>(null);
+  // Búsqueda client-side sobre las filas de la página de la vista previa
+  // (solo análisis en pantalla; no cambia el alcance del apply).
+  const [previewSearch, setPreviewSearch] = useState("");
   const [page, setPage] = useState(1);
   const [loadingBrands, setLoadingBrands] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -445,6 +448,15 @@ export const BulkPriceUpdate = () => {
       return acc + (recomputed - row.newPrice);
     }, 0) ?? 0;
   const adjustedNewTotal = preview ? preview.newTotal + totalAdjustment : null;
+
+  // Filas de la página filtradas por el texto de búsqueda (case-insensitive,
+  // substring sobre el nombre). Vacío = se muestran todas.
+  const filteredRows = useMemo(() => {
+    if (!preview) return [];
+    const term = previewSearch.trim().toLowerCase();
+    if (!term) return preview.rows;
+    return preview.rows.filter((r) => r.name.toLowerCase().includes(term));
+  }, [preview, previewSearch]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -793,13 +805,27 @@ export const BulkPriceUpdate = () => {
                   </div>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    placeholder="Buscar por producto..."
+                    value={previewSearch}
+                    onChange={(e) => setPreviewSearch(e.target.value)}
+                    aria-label="Buscar por producto"
+                    className="max-w-xs"
+                  />
+                  {previewSearch.trim() && (
+                    <span className="text-xs text-muted-foreground">
+                      {filteredRows.length} de {preview.rows.length} en esta página
+                    </span>
+                  )}
+                </div>
+
                 <div className="max-h-[320px] overflow-auto rounded-md border">
                       <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-10"></TableHead>
                             <TableHead>Producto</TableHead>
-                            <TableHead>Categoría</TableHead>
                             <TableHead>Marcas</TableHead>
                             <TableHead className="w-24">%</TableHead>
                             <TableHead>Precio</TableHead>
@@ -807,7 +833,13 @@ export const BulkPriceUpdate = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {preview.rows.map((row) => {
+                          {filteredRows.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
+                                No hay productos que coincidan con la búsqueda.
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredRows.map((row) => {
                             const override = productOverrides[row.id];
                             const overridePct = override !== undefined
                                 ? parseFloat(override)
@@ -830,9 +862,6 @@ export const BulkPriceUpdate = () => {
                                 </TableCell>
                                 <TableCell className="font-medium">
                                   {row.name}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                  {row.categoryName ?? "—"}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground uppercase">
                                   {row.brandValues.join(", ")}
