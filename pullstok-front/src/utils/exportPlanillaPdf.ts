@@ -24,15 +24,6 @@ const redondearPrecio = (n: number | null | undefined): number | null =>
 const precioMayorista = (sinIva: number | null | undefined): number | null =>
   sinIva == null ? null : redondearPrecio(Math.round(sinIva * 1.21 * 100) / 100);
 
-const headerParts = (
-  brand: string | null | undefined,
-  line: string | null | undefined,
-  subline: string | null | undefined,
-): string[] => {
-  const raw = [brand, line, subline].filter(Boolean) as string[];
-  return raw.filter((p, i) => i === 0 || p !== raw[i - 1]);
-};
-
 const esHumedito = (nombre: string): boolean =>
   /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
 
@@ -58,19 +49,30 @@ const displayName = (nombre: string, brand: string | null | undefined): string =
   return n.replace(/\s+/g, " ").trim();
 };
 
-/** Carga un asset local como data URL (jsPDF.addImage necesita data URL). */
-const loadLogoDataUrl = async (url: string): Promise<string | null> => {
+/** Carga un asset local como data URL y devuelve su data URL + tamaño natural,
+ * para dibujarlo SIN deformar (respetando su proporción real). */
+const loadLogo = async (
+  url: string,
+): Promise<{ dataUrl: string; width: number; height: number } | null> => {
   try {
     const response = await fetch(url);
     if (!response.ok) return null;
     const blob = await response.blob();
-    return await new Promise<string | null>((resolve) => {
+    const dataUrl = await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
       reader.onload = () =>
         resolve(typeof reader.result === "string" ? reader.result : null);
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
+    if (!dataUrl) return null;
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("logo"));
+    });
+    return { dataUrl, width: img.naturalWidth, height: img.naturalHeight };
   } catch {
     return null;
   }
@@ -99,32 +101,91 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     .filter((s) => s.entries.length > 0);
 
   const body: GroupRow[][] = [];
+
+  /** TALLA / etapa (línea normalizada) en el rotulado del proveedor. */
+  const tallaOf = (line: string | null): string => {
+    const l = (line ?? "").toUpperCase();
+    if (l === "PUPPY") return "CACHORROS";
+    if (l === "ADULT") return "ADULTOS";
+    if (l === "KITTEN") return "GATOS";
+    if (l === "SENIOR") return "SENIOR";
+    return line ?? "";
+  };
+
+  /** Razas (Pequeñas/Medianas/Grandes) derivadas del nombre o sublínea. */
+  const razasOf = (nombre: string, subline: string | null): string | null => {
+    const n = nombre.toUpperCase();
+    const s = (subline ?? "").toUpperCase();
+    if (/\b(MINI|X-SMALL|X SMALL|SMALL BREED)\b/.test(n) || /PEQUEÑA|PEQUENA|SMALL|MINI/.test(s)) return "RAZAS PEQUEÑAS";
+    if (/\b(MEDIUM BREED)\b/.test(n) || /MEDIANA|MEDIUM/.test(s)) return "RAZAS MEDIANAS";
+    if (/\b(LARGE BREED|MAXI|GIANT)\b/.test(n) || /GRANDE|MAXI|LARGE/.test(s)) return "RAZAS GRANDES";
+    return null;
+  };
+
+  // Talla + razas con su color (parecido al proveedor: morado/ámbar/cian).
+  const TALLA_COLORS: Record<string, [number, number, number]> = {
+    CACHORROS: [88, 28, 135],
+    ADULTOS: [17, 24, 39],
+    SENIOR: [30, 58, 138],
+    GATOS: [126, 34, 206],
+  };
+  const RAZAS_COLORS: Record<string, [number, number, number]> = {
+    "RAZAS PEQUEÑAS": [107, 33, 168],
+    "RAZAS MEDIANAS": [180, 83, 9],
+    "RAZAS GRANDES": [14, 116, 144],
+  };
+
   const pushBlock = (label: string, list: typeof sections) => {
     if (list.length === 0) return;
     body.push([{ content: label, colSpan: 4, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
-    // agrupar por marca
-    const byBrand = new Map<string, typeof list>();
-    for (const s of list) {
-      const b = s.brand ?? "Sin marca";
-      if (!byBrand.has(b)) byBrand.set(b, []);
-      byBrand.get(b)!.push(s);
+
+    // Aplanar productos con su marca/talla/razas.
+    const products = list.flatMap((s) =>
+      s.entries.map((e) => ({
+        e,
+        brand: s.brand ?? "Sin marca",
+        talla: tallaOf(s.line),
+        razas: razasOf(e.name, s.subline),
+      })),
+    );
+
+    const byBrand = new Map<string, typeof products>();
+    for (const p of products) {
+      if (!byBrand.has(p.brand)) byBrand.set(p.brand, []);
+      byBrand.get(p.brand)!.push(p);
     }
-    for (const [brand, secs] of byBrand) {
+
+    for (const [brand, prods] of byBrand) {
       body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10, fontStyle: "bold", fillColor: [229, 231, 235], textColor: [0, 0, 0], cellPadding: 3.5 } }]);
-      for (const section of secs) {
-        const band = headerParts(section.brand, section.line, section.subline)
-          .filter((p) => p !== brand)
-          .join(" · ");
-        if (band) {
-          body.push([{ content: band, colSpan: 4, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: [243, 244, 246], textColor: [0, 0, 0], cellPadding: 3 } }]);
+      // agrupar por talla (línea)
+      const byTalla = new Map<string, typeof prods>();
+      for (const p of prods) {
+        if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
+        byTalla.get(p.talla)!.push(p);
+      }
+      for (const [talla, tp] of byTalla) {
+        const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
+        body.push([{ content: talla || brand, colSpan: 4, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
+        // agrupar por razas
+        const byRazas = new Map<string | null, typeof tp>();
+        for (const p of tp) {
+          const k = p.razas;
+          if (!byRazas.has(k)) byRazas.set(k, []);
+          byRazas.get(k)!.push(p);
         }
-        for (const entry of section.entries) {
-          body.push([
-            displayName(entry.name, section.brand),
-            entry.unit ?? "-",
-            formatPrice(precioMayorista(entry.priceSinIva)),
-            formatPrice(redondearPrecio(entry.suggestedPrice)),
-          ] as unknown as GroupRow[]);
+        for (const [razas, rp] of byRazas) {
+          if (razas) {
+            const rColor = RAZAS_COLORS[razas] ?? [100, 116, 139];
+            body.push([{ content: razas, colSpan: 4, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
+          }
+          for (const p of rp) {
+            body.push([
+              displayName(p.e.name, p.brand),
+              p.e.unit ?? "-",
+              formatPrice(precioMayorista(p.e.priceSinIva)),
+              formatPrice(redondearPrecio(p.e.suggestedPrice)),
+            ] as unknown as GroupRow[]);
+          }
         }
       }
     }
@@ -147,17 +208,20 @@ export const exportPlanillaPdf = async (plan: PriceListDetail): Promise<string |
   const margin = 30;
   let y = 40;
 
-  // Logo horizontal + título
-  const logo = await loadLogoDataUrl(orgLogoUrl);
+  // Logo horizontal (izquierda, sin deformar) + título (derecha)
+  const logo = await loadLogo(orgLogoUrl);
+  const textX = margin + (logo ? 150 : 0);
   if (logo) {
-    doc.addImage(logo, "PNG", margin, y, 130, 42);
+    const logoW = 130;
+    const logoH = (logoW * logo.height) / logo.width;
+    doc.addImage(logo.dataUrl, "PNG", margin, y, logoW, logoH);
   }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text("Planilla mayorista", margin + (logo ? 140 : 0), y + 20);
+  doc.text("Planilla mayorista", textX, y + 20);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${plan.type} · ${plan.sections.length} secciones`, margin + (logo ? 140 : 0), y + 31);
+  doc.text(`${plan.type} · ${plan.sections.length} secciones`, textX, y + 31);
   y += 52;
 
   autoTable(doc, {
