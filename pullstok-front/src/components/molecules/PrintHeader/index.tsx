@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import defaultLogoUrl from "@/assets/LogoPullNegroHor.svg";
-import { useBrandingContext } from "@/contexts/BrandingContext";
 
 interface PrintHeaderProps {
   title: ReactNode;
@@ -8,15 +7,14 @@ interface PrintHeaderProps {
 }
 
 /**
- * Encabezado imprimible con el logo DEL NEGOCIO (branding.logoUrl del contexto).
- * Cada organización imprime con su propia marca. Si la org no subió un logo, se
- * usa el de Pullstok (variante horizontal en negro, apta para fondo blanco).
- * Se usa en todas las áreas imprimibles: listado de productos, planilla
- * mayorista, bulk price y planilla por kg.
+ * Encabezado imprimible con el logo horizontal oficial (LogoPullNegroHor):
+ * "EL ALMACEN DE LAS MASCOTAS". Se usa en TODAS las áreas imprimibles
+ * (listado de productos, planilla mayorista, bulk price y planilla por kg) con
+ * esa marca, independientemente del branding.logoUrl cargado (que apunta a un
+ * ícono circular).
  */
 export const PrintHeader = ({ title, subtitle }: PrintHeaderProps) => {
-  const { branding } = useBrandingContext();
-  const logoUrl = branding.logoUrl ?? defaultLogoUrl;
+  const logoUrl = defaultLogoUrl;
 
   return (
     <div className="mb-4 flex items-center gap-3">

@@ -182,11 +182,12 @@
     color: #000 !important;
     border-color: #000 !important;
   }
-  /* La tabla del área imprimible usa todo el ancho de la hoja; las columnas
-     de Precio/Sugerido se ajustan a su contenido (auto) para que el nombre del
-     producto ocupe el resto y no se parta en 2 renglones por columnas anchas. */
+  /* La tabla del área imprimible usa todo el ancho de la hoja con layout fijo:
+     los anchos los definen las celdas del header (Producto flexible, Precio/
+     Sugerido fijos), así las columnas NO cambian de ancho entre secciones. */
   .print-area table {
     width: 100% !important;
+    table-layout: fixed !important;
   }
   .print-area th,
   .print-area td {

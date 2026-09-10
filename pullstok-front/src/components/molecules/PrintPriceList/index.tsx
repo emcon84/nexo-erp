@@ -117,8 +117,8 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Producto</TableHead>
-              <TableHead className="text-right">Precio</TableHead>
-              <TableHead className="text-right">Sugerido</TableHead>
+              <TableHead className="w-28 text-right">Precio</TableHead>
+              <TableHead className="w-28 text-right">Sugerido</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
