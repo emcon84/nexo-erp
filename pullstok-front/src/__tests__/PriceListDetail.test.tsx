@@ -21,12 +21,18 @@ vi.mock("@/contexts/BrandingContext", () => ({
   }),
 }));
 
+vi.mock("@/utils/exportPlanillaPdf", () => ({
+  exportPlanillaPdf: vi.fn().mockResolvedValue("planilla_mayorista.pdf"),
+}));
+
 import { PriceListDetail } from "@/views/PriceListDetail";
 import { getPriceList, adjustPriceList } from "@/services/priceLists";
+import { exportPlanillaPdf } from "@/utils/exportPlanillaPdf";
 import type { PriceListDetail as Plan } from "@/services/priceLists";
 
 const mockGet = vi.mocked(getPriceList);
 const mockAdjust = vi.mocked(adjustPriceList);
+const mockExport = vi.mocked(exportPlanillaPdf);
 
 const plan: Plan = {
   id: "pl-1",
@@ -167,12 +173,11 @@ describe("PriceListDetail — detalle, edición y ajuste masivo", () => {
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(2));
   });
 
-  it("imprime la planilla (window.print) manteniendo el print-area montado", async () => {
-    const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
+  it("descarga el PDF de la planilla (jsPDF)", async () => {
     render(<PriceListDetail />);
     await screen.findAllByText("SIEGER Puppy Mini x 1 Kg.");
-    fireEvent.click(screen.getByRole("button", { name: "Imprimir planilla" }));
-    expect(printSpy).toHaveBeenCalledTimes(1);
-    printSpy.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "Descargar PDF" }));
+    await waitFor(() => expect(mockExport).toHaveBeenCalledTimes(1));
+    expect(mockExport).toHaveBeenCalledWith(expect.objectContaining({ id: "pl-1" }));
   });
 });

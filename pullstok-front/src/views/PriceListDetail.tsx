@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PrintPriceList } from "@/components/molecules/PrintPriceList";
+import { exportPlanillaPdf } from "@/utils/exportPlanillaPdf";
 import { groupByPdfHierarchy } from "@/lib/printGrouping";
 import {
   adjustPriceList,
@@ -172,8 +172,23 @@ export const PriceListDetail = () => {
             importada el {formatDate(plan.importedAt)} · {plan.sourceFilename}
           </p>
         </div>
-        <Button variant="outline" onClick={() => window.print()}>
-          Imprimir planilla
+        <Button
+          variant="outline"
+          disabled={submitting}
+          onClick={async () => {
+            setSubmitting(true);
+            try {
+              const name = await exportPlanillaPdf(plan);
+              if (name) toast.success("PDF descargado");
+            } catch (e) {
+              const m = e instanceof Error ? e.message : "Error al generar el PDF";
+              toast.error(m);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          Descargar PDF
         </Button>
       </div>
 
@@ -319,9 +334,6 @@ export const PriceListDetail = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Área imprimible (siempre montada con los datos actuales) */}
-      <PrintPriceList plan={plan} />
     </div>
   );
 };
