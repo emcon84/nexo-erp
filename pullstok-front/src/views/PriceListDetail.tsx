@@ -42,6 +42,10 @@ const formatPrice = (n: number | null | undefined) =>
         maximumFractionDigits: 2,
       })}`;
 
+/** Precio mayorista = precio sin IVA + 21% (para imprimir la planilla). */
+const precioMayorista = (sinIva: number | null | undefined): number | null =>
+  sinIva == null ? null : Math.round(sinIva * 1.21 * 100) / 100;
+
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-AR", {
     day: "2-digit",
@@ -186,7 +190,7 @@ export const PriceListDetail = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Producto</TableHead>
-                  <TableHead className="text-right">Precio (Con IVA)</TableHead>
+                  <TableHead className="text-right">Precio mayorista</TableHead>
                   <TableHead className="text-right">Sugerido</TableHead>
                   <TableHead className="w-24">Excluir</TableHead>
                 </TableRow>
@@ -201,7 +205,7 @@ export const PriceListDetail = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatPrice(entry.priceConIva)}
+                      {formatPrice(precioMayorista(entry.priceSinIva))}
                     </TableCell>
                     <TableCell className="text-right">
                       <Input

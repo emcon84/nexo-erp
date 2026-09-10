@@ -22,6 +22,10 @@ const formatPrice = (n: number | null | undefined) =>
         maximumFractionDigits: 2,
       })}`;
 
+/** Precio mayorista = precio sin IVA + 21% (lo que se imprime para mayoristas). */
+const precioMayorista = (sinIva: number | null | undefined): number | null =>
+  sinIva == null ? null : Math.round(sinIva * 1.21 * 100) / 100;
+
 const formatPeriod = (period: string | null) =>
   period ? ` · vigencia ${period}` : " · sin vigencia";
 
@@ -76,7 +80,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
                     ) : null}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {formatPrice(entry.priceConIva)}
+                    {formatPrice(precioMayorista(entry.priceSinIva))}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {formatPrice(entry.suggestedPrice)}
