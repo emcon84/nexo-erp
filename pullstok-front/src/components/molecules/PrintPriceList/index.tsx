@@ -105,7 +105,9 @@ const normalizeLine = (line: string | null): string | null => {
 export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
   const sections = groupByPdfHierarchy(
     plan.sections.map((s) => ({ ...s, line: normalizeLine(s.line) })),
-  );
+    // Se descartan las secciones no-alimento (limpieza, piedra sanitaria) que
+    // el preview manda bajo la sublínea "IVA" (etiqueta de precio colada).
+  ).filter((s) => !/^IVA$/i.test(s.subline ?? ""));
 
   // Separar alimento SECO de HÚMEDO según el nombre del producto. Se particiona
   // cada sección del PDF en sus entradas secas y húmedas, para mostrar primero
