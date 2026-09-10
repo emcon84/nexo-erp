@@ -36,9 +36,6 @@ const precioMayorista = (sinIva: number | null | undefined): number | null => {
   return redondearPrecio(bruto);
 };
 
-const formatPeriod = (period: string | null) =>
-  period ? ` · vigencia ${period}` : " · sin vigencia";
-
 /** Quita del nombre el prefijo que coincide con un token del encabezado de la
  * sección (marca/línea/sublínea) para no repetirlo en cada fila. Ej: bajo
  * "EUKANUBA · PUPPY", "EUKANUBA PUPPY SMALL BREED 1KG" → "SMALL BREED 1KG". */
@@ -95,12 +92,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
     <div className="print-area hidden print:block" aria-hidden="true">
       <PrintHeader
         title="Planilla mayorista"
-        subtitle={
-          <>
-            {plan.type}
-            {formatPeriod(plan.period)} · {plan.sections.length} secciones
-          </>
-        }
+        subtitle={`${plan.type} · ${plan.sections.length} secciones`}
       />
 
       {sections.map((section) => (

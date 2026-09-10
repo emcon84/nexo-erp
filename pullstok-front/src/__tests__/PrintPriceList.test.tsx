@@ -72,8 +72,9 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     expect(filaSinSugerido).toHaveTextContent("—");
   });
 
-  it("muestra el período de vigencia de la planilla", () => {
+  it("muestra tipo y cantidad de secciones sin la vigencia", () => {
     render(<PrintPriceList plan={plan} />);
-    expect(screen.getByText(/vigencia 2026-08-10/)).toBeInTheDocument();
+    expect(screen.getByText("SECO · 1 secciones")).toBeInTheDocument();
+    expect(screen.queryByText(/vigencia/)).not.toBeInTheDocument();
   });
 });

@@ -182,11 +182,11 @@
     color: #000 !important;
     border-color: #000 !important;
   }
-  /* La tabla del área imprimible ajusta al ancho de la hoja y deja envolver el
-     nombre del producto (evita scroll/columns cortadas al imprimir). */
+  /* La tabla del área imprimible usa todo el ancho de la hoja; las columnas
+     de Precio/Sugerido se ajustan a su contenido (auto) para que el nombre del
+     producto ocupe el resto y no se parta en 2 renglones por columnas anchas. */
   .print-area table {
     width: 100% !important;
-    table-layout: fixed !important;
   }
   .print-area th,
   .print-area td {
