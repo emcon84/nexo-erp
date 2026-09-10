@@ -38,7 +38,7 @@ const formatPrice = (n: number | null | undefined) =>
   n === null || n === undefined
     ? "—"
     : `$${Number(n).toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       })}`;
 
