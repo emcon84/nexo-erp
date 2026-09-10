@@ -49,6 +49,14 @@ const displayName = (nombre: string, brand: string | null | undefined): string =
   return n.replace(/\s+/g, " ").trim();
 };
 
+/** Productos NO alimento (limpieza, piedra sanitaria, ambientadores...) que
+ * vienen en la planilla pero no deben estar en la lista mayorista de alimento. */
+const NON_FOOD =
+  /\b(CITRICA|LAVANDA|MARINA|NEUTRA|LIMÓN|LIMON|MANZANA|ROSAS|MONKCAT|BENTONITA|SÍLICA|SILICA|PIEDRAS SANITARIAS|ARENA)\b/i;
+
+const isNonFood = (nombre: string, unit: string | null): boolean =>
+  NON_FOOD.test(nombre) || /^\d+([.,]\d+)?\s*[lL]$/.test(unit ?? ""); // litros → no alimento
+
 /** Carga un asset local como data URL y devuelve su data URL + tamaño natural,
  * para dibujarlo SIN deformar (respetando su proporción real). */
 const loadLogo = async (
@@ -94,10 +102,16 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
   ).filter((s) => !/^IVA$/i.test(s.subline ?? ""));
 
   const seco = sections
-    .map((s) => ({ ...s, entries: s.entries.filter((e) => !esHumedito(e.name)) }))
+    .map((s) => ({
+      ...s,
+      entries: s.entries.filter((e) => !esHumedito(e.name) && !isNonFood(e.name, e.unit)),
+    }))
     .filter((s) => s.entries.length > 0);
   const humedo = sections
-    .map((s) => ({ ...s, entries: s.entries.filter((e) => esHumedito(e.name)) }))
+    .map((s) => ({
+      ...s,
+      entries: s.entries.filter((e) => esHumedito(e.name) && !isNonFood(e.name, e.unit)),
+    }))
     .filter((s) => s.entries.length > 0);
 
   const body: GroupRow[][] = [];
@@ -122,7 +136,7 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     return null;
   };
 
-  // Talla + razas con su color (parecido al proveedor: morado/ámbar/cian).
+  // Talla + razas + marca con su color (parecido al proveedor).
   const TALLA_COLORS: Record<string, [number, number, number]> = {
     CACHORROS: [88, 28, 135],
     ADULTOS: [17, 24, 39],
@@ -133,6 +147,13 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     "RAZAS PEQUEÑAS": [107, 33, 168],
     "RAZAS MEDIANAS": [180, 83, 9],
     "RAZAS GRANDES": [14, 116, 144],
+  };
+  const BRAND_COLORS: Record<string, [number, number, number]> = {
+    EUKANUBA: [16, 122, 87],
+    "ROYAL CANIN": [157, 23, 77],
+    MONKCAT: [146, 64, 14],
+    WIPUP: [2, 132, 199],
+    ASADITOS: [190, 24, 93],
   };
 
   const pushBlock = (label: string, list: typeof sections) => {
@@ -156,7 +177,8 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     }
 
     for (const [brand, prods] of byBrand) {
-      body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10, fontStyle: "bold", fillColor: [229, 231, 235], textColor: [0, 0, 0], cellPadding: 3.5 } }]);
+      const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
+      body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
       // agrupar por talla (línea)
       const byTalla = new Map<string, typeof prods>();
       for (const p of prods) {
@@ -206,22 +228,23 @@ export const exportPlanillaPdf = async (plan: PriceListDetail): Promise<string |
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const margin = 30;
+  const pageW = doc.internal.pageSize.getWidth();
   let y = 40;
 
-  // Logo horizontal (izquierda, sin deformar) + título (derecha)
+  // Logo horizontal a la IZQUIERDA (sin deformar); título/sublítulo a la DERECHA
   const logo = await loadLogo(orgLogoUrl);
-  const textX = margin + (logo ? 150 : 0);
   if (logo) {
     const logoW = 130;
     const logoH = (logoW * logo.height) / logo.width;
     doc.addImage(logo.dataUrl, "PNG", margin, y, logoW, logoH);
   }
+  const rightX = pageW - margin;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text("Planilla mayorista", textX, y + 20);
+  doc.text("Planilla mayorista", rightX, y + 20, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${plan.type} · ${plan.sections.length} secciones`, textX, y + 31);
+  doc.text(`${plan.type} · ${plan.sections.length} secciones`, rightX, y + 31, { align: "right" });
   y += 52;
 
   autoTable(doc, {
