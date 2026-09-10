@@ -641,6 +641,16 @@ function parseDataRow(
  * Eukanuba: PUPPY / ADULT / SENIOR / FIT BODY / LAMB / KITTEN / GATO.
  * Royal Canin: FELINE / CANINE / SIZE (mini/medium/maxi/giant/x-small) /
  * VETERINARY (feline/canine). */
+/** Marcas adicionales que trae la planilla (no Eukanuba/Royal Canin): piedras
+ * sanitarias y accesorios que antes quedaban colgados de "ROYAL CANIN". */
+const EXTRA_BRAND_REGEX = /\b(MONKCAT|WIPUP|ASADITOS)\b/i;
+
+/** Devuelve la marca extra conocida si el nombre la contiene, sino null. */
+function knownExtraBrand(nombre: string): string | null {
+  const m = EXTRA_BRAND_REGEX.exec(nombre);
+  return m ? m[1].toUpperCase() : null;
+}
+
 function inferLineaFromName(nombre: string): string | null {
   const upper = nombre.toUpperCase();
 
@@ -668,7 +678,9 @@ function inferLineaFromName(nombre: string): string | null {
     if (/\b(BABYCAT|KITTEN|INSTINCTIVE|SENSORY|INDOOR|EXIGENT|SENSIBLE|PERSIAN|SIAMESE|LIGHT WEIGHT|DIGEST|APPETITE|HAIR|WEIGHT CARE|URINARY SO|SATIETY|RECOVERY|RENAL|HEPATIC|MOBILITY|CARDIAC|CALM|DIABETIC|ALLERGENIC|ANALLERGENIC|HYPOALLERGENIC|GASTRO|FIBRE|STARTER|MOTHER|FIT\b|ACTIVE|GC\b|MATURE CONSULT|NEUTERED BALANCE|HAIRBALL|URINARY CARE)\b/i.test(upper)) return "FELINE";
     // Palabras clave de perro (CANINE) — líneas Canine (razas, tamaño).
     if (/\b(PUPPY|ADULT|SENIOR|AGEING|CLUB|PROTECH|STARTER|DERMACOMFORT|CANINE|POODLE|YORKSHIRE|DACHSHUND|CHIHUAHUA|BULLDOG|JACK|OV|LABRADOR|BOXER|GOLDEN|CANICHE|SCHNAUZER|PUG|X-SMALL|X- SMALL|SIZE|MEDIUM|MAXI|GIANT)\b/i.test(upper)) return "CANINE";
-    return "ROYAL CANIN";
+    // Sin línea reconocible → null (producto de otra marca/categoría; NO se
+    // fuerza "ROYAL CANIN" para no colgar limpiadores/piedra sanitaria de RC).
+    return null;
   }
 
   // Eukanuba: etapa del nombre
@@ -721,21 +733,27 @@ export function parsePriceList(text: string, detected?: DetectedLayout): ParsedP
       if (!nombre) continue; // sin nombre y sin herencia → no es fila utilizable
       if (nombre) lastNombre = nombre;
 
-      // Inferir marca real del nombre (el PDF mezcla Eukanuba y Royal Canin).
-      // Regla simple y robusta: si el nombre contiene EUKANUBA → EUKANUBA,
-      // sino → ROYAL CANIN (páginas 2-7 son Royal Canin u otros proveedores).
+      // Inferir marca y línea RELES del nombre (el PDF mezcla Eukanuba, Royal
+      // Canin y otras marcas: MONKCAT/WIPUP/ASADITOS...). Antes TODO lo que no
+      // traía EUKANUBA se forzaba a "ROYAL CANIN" y productos de otras marcas
+      // (limpieza, piedra sanitaria) quedaban colgados de ahí.
+      const lineaInferida =
+        inferLineaFromName(nombre) ??
+        (currentLinea && !/^(ROYAL CANIN|EUKANUBA)$/i.test(currentLinea)
+          ? currentLinea
+          : null);
+      // Es Royal Canin solo si la línea es una línea RC reconocida (FELINE,
+      // CANINE, SIZE..., no el fallback). La marca EUKANUBA/marca extra va
+      // primero por nombre.
+      const esLineaRC =
+        lineaInferida !== null && lineaInferida !== "ROYAL CANIN";
       const marcaInferida = /EUKANUBA/i.test(nombre)
         ? "EUKANUBA"
-        : "ROYAL CANIN";
-
-      // Inferir línea del nombre como fuente PRIMARIA (evita herencia de
-      // jerarquía entre secciones). Fallback a currentLinea si el nombre no
-      // permite inferirla.
-      const lineaInferida = inferLineaFromName(nombre) ?? currentLinea;
+        : knownExtraBrand(nombre) || (esLineaRC ? "ROYAL CANIN" : null);
 
       rows.push({
         nombre,
-        marca: parsed.marca ?? marcaInferida ?? currentMarca,
+        marca: parsed.marca ?? marcaInferida,
         linea: lineaInferida,
         sublinea: currentSublinea,
         gama: parsed.gama ?? currentGama,

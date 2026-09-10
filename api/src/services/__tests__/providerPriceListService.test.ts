@@ -61,4 +61,28 @@ describe("parsePriceList — limpieza de nombres raros", () => {
     );
     expect(rows[0].codigo).toBe("3390102");
   });
+
+  it("detecta la marca extra (MONKCAT) y no la cuelga de ROYAL CANIN", () => {
+    const { rows } = royalCanin(
+      "009 MONKCAT NEUTRO 4 KG 2.559,84\t$ 4.623,00\t$",
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].marca).toBe("MONKCAT");
+  });
+
+  it("productos sin marca (limpieza) NO van a ROYAL CANIN", () => {
+    const { rows } = royalCanin(
+      "80041 CITRICA 3,8 L 10.502,04\t$ 16.905,90\t$",
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].marca).toBeNull();
+  });
+
+  it("Royal Canin con línea reconocida mantiene marca ROYAL CANIN", () => {
+    const { rows } = royalCanin(
+      "URINARY SO FELINE WET POUCH (12X85G) X 1.02 KG 10642\t$12877\t$",
+    );
+    expect(rows[0].marca).toBe("ROYAL CANIN");
+    expect(rows[0].linea).toBe("VETERINARY FELINE");
+  });
 });
