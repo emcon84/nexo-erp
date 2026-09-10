@@ -57,8 +57,8 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     expect(
       screen.getByText("SIEGER · SUPER PREMIUM PARA PERROS · SIEGER PUPPY"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Puppy Mini x 1 Kg.")).toBeInTheDocument();
-    expect(screen.getByText("Puppy Mini x 3 Kg.")).toBeInTheDocument();
+    expect(screen.getByText("SIEGER Puppy Mini x 1 Kg.")).toBeInTheDocument();
+    expect(screen.getByText("SIEGER Puppy Mini x 3 Kg.")).toBeInTheDocument();
   });
 
   it("muestra 2 columnas: Precio (Con IVA) y Sugerido, con '—' cuando no hay sugerido", () => {
@@ -68,7 +68,7 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     expect(screen.getByText("$ 10.600")).toBeInTheDocument(); // mayorista sin IVA +21% → múltiplo de 100 (sin ,00)
     expect(screen.getByText("$ 14.200")).toBeInTheDocument(); // sugerido redondeado a múltiplo de 100 (sin ,00)
     // e2 no tiene sugerido → "—".
-    const filaSinSugerido = screen.getByText("Puppy Mini x 3 Kg.").closest("tr");
+    const filaSinSugerido = screen.getByText("SIEGER Puppy Mini x 3 Kg.").closest("tr");
     expect(filaSinSugerido).toHaveTextContent("—");
   });
 

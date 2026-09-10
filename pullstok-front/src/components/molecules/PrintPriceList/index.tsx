@@ -39,24 +39,6 @@ const precioMayorista = (sinIva: number | null | undefined): number | null => {
 /** Quita del nombre el prefijo que coincide con un token del encabezado de la
  * sección (marca/línea/sublínea) para no repetirlo en cada fila. Ej: bajo
  * "EUKANUBA · PUPPY", "EUKANUBA PUPPY SMALL BREED 1KG" → "SMALL BREED 1KG". */
-const stripLeading = (name: string, token: string | null | undefined): string => {
-  if (!token || !name) return name;
-  const esc = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return name.replace(new RegExp(`^${esc}\\b\\s*`, "i"), "");
-};
-
-const cleanProductName = (
-  name: string,
-  brand: string | null | undefined,
-  line: string | null | undefined,
-  subline: string | null | undefined,
-): string => {
-  let n = stripLeading(name, brand);
-  n = stripLeading(n, line);
-  n = stripLeading(n, subline);
-  return n.replace(/\s+/g, " ").trim();
-};
-
 /** True si el nombre ya expresa el peso de la unidad (para no repetir la
  * sublínea: "X 1.02 KG" + "(1.02 KG)" → se omite la sublínea). */
 const nameAlreadyCarriesWeight = (
@@ -123,12 +105,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
           </TableHeader>
           <TableBody>
             {section.entries.map((entry) => {
-              const nombre = cleanProductName(
-                entry.name,
-                section.brand,
-                section.line,
-                section.subline,
-              );
+              const nombre = entry.name;
               const showUnit =
                 entry.unit && !nameAlreadyCarriesWeight(nombre, entry.unit);
               return (
