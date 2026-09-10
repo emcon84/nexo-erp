@@ -44,16 +44,10 @@ const formatPrice = (n: number | null | undefined) =>
 
 /** Precio mayorista = precio sin IVA + 21%, redondeado al múltiplo de 100
  * (mismo criterio que roundBolsaPriceIfHigh del backend: si >= 500). */
-const isRoyalCanin = (brand?: string | null): boolean =>
-  /^ROYAL CANIN$/i.test((brand ?? "").trim());
-
-/** Precio mayorista = sin IVA + 21% (IVA); Royal Canin suma +15% de ganancia. */
-const precioMayorista = (
-  sinIva: number | null | undefined,
-  brand?: string | null,
-): number | null => {
+/** Precio mayorista = sin IVA + 21% (IVA) + 15% de ganancia (todos). */
+const precioMayorista = (sinIva: number | null | undefined): number | null => {
   if (sinIva == null) return null;
-  const bruto = Math.round(sinIva * 1.21 * (isRoyalCanin(brand) ? 1.15 : 1) * 100) / 100;
+  const bruto = Math.round(sinIva * 1.21 * 1.15 * 100) / 100;
   return bruto >= 500 ? Math.round(bruto / 100) * 100 : bruto;
 };
 
@@ -231,7 +225,7 @@ export const PriceListDetail = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatPrice(precioMayorista(entry.priceSinIva, section.brand))}
+                      {formatPrice(precioMayorista(entry.priceSinIva))}
                     </TableCell>
                     <TableCell className="text-right">
                       <Input

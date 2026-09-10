@@ -21,14 +21,11 @@ const formatPrice = (n: number | null | undefined) =>
 const redondearPrecio = (n: number | null | undefined): number | null =>
   n == null ? null : n >= 500 ? Math.round(n / 100) * 100 : n;
 
-const isRoyalCanin = (brand?: string | null): boolean =>
-  /^ROYAL CANIN$/i.test((brand ?? "").trim());
-
-/** Precio mayorista = sin IVA + 21% (IVA); Royal Canin suma +15% de ganancia. */
-const precioMayorista = (sinIva: number | null | undefined, brand?: string | null): number | null =>
-  sinIva == null
-    ? null
-    : redondearPrecio(Math.round(sinIva * 1.21 * (isRoyalCanin(brand) ? 1.15 : 1) * 100) / 100);
+/** Precio mayorista = sin IVA + 21% (IVA) + 15% de ganancia (todos los
+ * productos). La base para la actualización masiva NO lleva el 15% (esa se
+ * guarda aparte en product.price sin ganancia). */
+const precioMayorista = (sinIva: number | null | undefined): number | null =>
+  sinIva == null ? null : redondearPrecio(Math.round(sinIva * 1.21 * 1.15 * 100) / 100);
 
 const esHumedito = (nombre: string): boolean =>
   /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
@@ -97,9 +94,9 @@ const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [n
 /** Margen al público: el Sugerido se deriva del Precio mayorista × este factor. */
 const SUGERIDO_FACTOR = 1.3334;
 
-/** Sugerido = Precio mayorista (con el +15% de RC si aplica) × margen al público. */
-const publico = (sinIva: number | null | undefined, brand?: string | null): number | null => {
-  const mayorista = precioMayorista(sinIva, brand);
+/** Sugerido = Precio mayorista (con el +15%) × margen al público. */
+const publico = (sinIva: number | null | undefined): number | null => {
+  const mayorista = precioMayorista(sinIva);
   return mayorista == null ? null : redondearPrecio(Math.round(mayorista * SUGERIDO_FACTOR * 100) / 100);
 };
 
@@ -219,8 +216,8 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
             body.push([
               displayName(p.e.name, p.brand),
               p.e.unit ?? "-",
-              formatPrice(precioMayorista(p.e.priceSinIva, p.brand)),
-              formatPrice(publico(p.e.priceSinIva, p.brand)),
+              formatPrice(precioMayorista(p.e.priceSinIva)),
+              formatPrice(publico(p.e.priceSinIva)),
             ] as unknown as GroupRow[]);
           }
         }
