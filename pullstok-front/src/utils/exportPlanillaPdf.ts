@@ -21,8 +21,14 @@ const formatPrice = (n: number | null | undefined) =>
 const redondearPrecio = (n: number | null | undefined): number | null =>
   n == null ? null : n >= 500 ? Math.round(n / 100) * 100 : n;
 
-const precioMayorista = (sinIva: number | null | undefined): number | null =>
-  sinIva == null ? null : redondearPrecio(Math.round(sinIva * 1.21 * 100) / 100);
+const isRoyalCanin = (brand?: string | null): boolean =>
+  /^ROYAL CANIN$/i.test((brand ?? "").trim());
+
+/** Precio mayorista = sin IVA + 21% (IVA); Royal Canin suma +15% de ganancia. */
+const precioMayorista = (sinIva: number | null | undefined, brand?: string | null): number | null =>
+  sinIva == null
+    ? null
+    : redondearPrecio(Math.round(sinIva * 1.21 * (isRoyalCanin(brand) ? 1.15 : 1) * 100) / 100);
 
 const esHumedito = (nombre: string): boolean =>
   /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
@@ -204,7 +210,7 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
             body.push([
               displayName(p.e.name, p.brand),
               p.e.unit ?? "-",
-              formatPrice(precioMayorista(p.e.priceSinIva)),
+              formatPrice(precioMayorista(p.e.priceSinIva, p.brand)),
               formatPrice(redondearPrecio(p.e.suggestedPrice)),
             ] as unknown as GroupRow[]);
           }
