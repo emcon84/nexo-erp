@@ -24,9 +24,6 @@ const redondearPrecio = (n: number | null | undefined): number | null =>
 const precioMayorista = (sinIva: number | null | undefined): number | null =>
   sinIva == null ? null : redondearPrecio(Math.round(sinIva * 1.21 * 100) / 100);
 
-const esHumedito = (nombre: string): boolean =>
-  /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
-
 const normalizeLine = (line: string | null): string | null => {
   if (!line) return line;
   const l = line.trim().toUpperCase();
@@ -91,40 +88,18 @@ const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [n
 interface GroupRow {
   content: string | number;
   colSpan?: number;
+  rowSpan?: number;
+  label?: string;
   styles?: Record<string, unknown>;
 }
 
-/** Arma el body de autoTable a partir de las secciones (seco/húmedo → marca →
- * sección band + productos), con grupos de fila a lo ancho tipo banda. */
-const buildBody = (plan: PriceListDetail): GroupRow[][] => {
+/** Arma el body de autoTable con el diseño del proveedor: columna GAMA (marca)
+ * y columna TIPO (razas) combinadas verticalmente (rowSpan) y rotuladas en
+ * vertical; luego Descripción/Kg/Precio/Sugerido. */
+const buildBody = (plan: PriceListDetail): (string | GroupRow)[][] => {
   const sections = groupByPdfHierarchy(
     plan.sections.map((s) => ({ ...s, line: normalizeLine(s.line) })),
   ).filter((s) => !/^IVA$/i.test(s.subline ?? ""));
-
-  const seco = sections
-    .map((s) => ({
-      ...s,
-      entries: s.entries.filter((e) => !esHumedito(e.name) && !isNonFood(e.name, e.unit)),
-    }))
-    .filter((s) => s.entries.length > 0);
-  const humedo = sections
-    .map((s) => ({
-      ...s,
-      entries: s.entries.filter((e) => esHumedito(e.name) && !isNonFood(e.name, e.unit)),
-    }))
-    .filter((s) => s.entries.length > 0);
-
-  const body: GroupRow[][] = [];
-
-  /** TALLA / etapa (línea normalizada) en el rotulado del proveedor. */
-  const tallaOf = (line: string | null): string => {
-    const l = (line ?? "").toUpperCase();
-    if (l === "PUPPY") return "CACHORROS";
-    if (l === "ADULT") return "ADULTOS";
-    if (l === "KITTEN") return "GATOS";
-    if (l === "SENIOR") return "SENIOR";
-    return line ?? "";
-  };
 
   /** Razas (Pequeñas/Medianas/Grandes) derivadas del nombre o sublínea. */
   const razasOf = (nombre: string, subline: string | null): string | null => {
@@ -136,13 +111,6 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     return null;
   };
 
-  // Talla + razas + marca con su color (parecido al proveedor).
-  const TALLA_COLORS: Record<string, [number, number, number]> = {
-    CACHORROS: [88, 28, 135],
-    ADULTOS: [17, 24, 39],
-    SENIOR: [30, 58, 138],
-    GATOS: [126, 34, 206],
-  };
   const RAZAS_COLORS: Record<string, [number, number, number]> = {
     "RAZAS PEQUEÑAS": [107, 33, 168],
     "RAZAS MEDIANAS": [180, 83, 9],
@@ -156,66 +124,57 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     ASADITOS: [190, 24, 93],
   };
 
-  const pushBlock = (label: string, list: typeof sections) => {
-    if (list.length === 0) return;
-    body.push([{ content: label, colSpan: 4, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
+  const products = sections.flatMap((s) =>
+    s.entries
+      .filter((e) => !isNonFood(e.name, e.unit))
+      .map((e) => ({ e, brand: s.brand ?? "Sin marca", razas: razasOf(e.name, s.subline) })),
+  );
 
-    // Aplanar productos con su marca/talla/razas.
-    const products = list.flatMap((s) =>
-      s.entries.map((e) => ({
-        e,
-        brand: s.brand ?? "Sin marca",
-        talla: tallaOf(s.line),
-        razas: razasOf(e.name, s.subline),
-      })),
-    );
+  const rows: (string | GroupRow)[][] = [];
+  const byBrand = new Map<string, typeof products>();
+  for (const p of products) {
+    if (!byBrand.has(p.brand)) byBrand.set(p.brand, []);
+    byBrand.get(p.brand)!.push(p);
+  }
 
-    const byBrand = new Map<string, typeof products>();
-    for (const p of products) {
-      if (!byBrand.has(p.brand)) byBrand.set(p.brand, []);
-      byBrand.get(p.brand)!.push(p);
+  for (const [brand, prods] of byBrand) {
+    const brandStart = rows.length;
+    const byRazas = new Map<string | null, typeof prods>();
+    for (const p of prods) {
+      const k = p.razas;
+      if (!byRazas.has(k)) byRazas.set(k, []);
+      byRazas.get(k)!.push(p);
     }
-
-    for (const [brand, prods] of byBrand) {
-      const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
-      body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
-      // agrupar por talla (línea)
-      const byTalla = new Map<string, typeof prods>();
-      for (const p of prods) {
-        if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
-        byTalla.get(p.talla)!.push(p);
-      }
-      for (const [talla, tp] of byTalla) {
-        const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
-        body.push([{ content: talla || brand, colSpan: 4, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
-        // agrupar por razas
-        const byRazas = new Map<string | null, typeof tp>();
-        for (const p of tp) {
-          const k = p.razas;
-          if (!byRazas.has(k)) byRazas.set(k, []);
-          byRazas.get(k)!.push(p);
+    for (const [razas, rp] of byRazas) {
+      const rCount = rp.length;
+      rp.forEach((p, i) => {
+        const row: (string | GroupRow)[] = [
+          "", // GAMA (se completa abajo con rowSpan)
+          "", // TIPO (se completa abajo con rowSpan)
+          displayName(p.e.name, p.brand),
+          p.e.unit ?? "-",
+          formatPrice(precioMayorista(p.e.priceSinIva)),
+          formatPrice(redondearPrecio(p.e.suggestedPrice)),
+        ];
+        if (i === 0 && razas) {
+          row[1] = {
+            content: "",
+            rowSpan: rCount,
+            label: razas,
+            styles: { fillColor: RAZAS_COLORS[razas] ?? [100, 116, 139], valign: "middle" },
+          };
         }
-        for (const [razas, rp] of byRazas) {
-          if (razas) {
-            const rColor = RAZAS_COLORS[razas] ?? [100, 116, 139];
-            body.push([{ content: razas, colSpan: 4, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
-          }
-          for (const p of rp) {
-            body.push([
-              displayName(p.e.name, p.brand),
-              p.e.unit ?? "-",
-              formatPrice(precioMayorista(p.e.priceSinIva)),
-              formatPrice(redondearPrecio(p.e.suggestedPrice)),
-            ] as unknown as GroupRow[]);
-          }
-        }
-      }
+        rows.push(row);
+      });
     }
-  };
-
-  pushBlock("ALIMENTO SECO", seco);
-  pushBlock("ALIMENTO HÚMEDO", humedo);
-  return body;
+    rows[brandStart][0] = {
+      content: "",
+      rowSpan: rows.length - brandStart,
+      label: brand,
+      styles: { fillColor: BRAND_COLORS[brand] ?? [30, 41, 59], valign: "middle" },
+    };
+  }
+  return rows;
 };
 
 /**
@@ -249,15 +208,43 @@ export const exportPlanillaPdf = async (plan: PriceListDetail): Promise<string |
 
   autoTable(doc, {
     startY: y,
-    head: [["Descripción", "Kg x U.", "Precio", "Sugerido"]],
+    head: [["GAMA", "TIPO", "Descripción", "KG", "Precio", "Sugerido"]],
     body: body as never,
     margin: { left: margin, right: margin, top: margin, bottom: 24 },
     styles: { ...ROW_STYLES, cellPadding: 2.5, lineColor: [0, 0, 0], lineWidth: 0.15 },
-    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, halign: "left" },
+    headStyles: { fillColor: [229, 231, 235], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 8.5, halign: "center" },
     columnStyles: {
-      1: { halign: "right", cellWidth: 46 },
-      2: { halign: "right", cellWidth: 60 },
-      3: { halign: "right", cellWidth: 60 },
+      0: { cellWidth: 22, halign: "center", valign: "middle" },
+      1: { cellWidth: 22, halign: "center", valign: "middle" },
+      3: { halign: "center", cellWidth: 34 },
+      4: { halign: "right", cellWidth: 62 },
+      5: { halign: "right", cellWidth: 62 },
+    },
+    didDrawCell: (data: {
+      section: string;
+      column: { index: number };
+      cell: { raw: unknown; x: number; y: number; width: number; height: number };
+    }) => {
+      // Rótulo vertical de GAMA/TIPO en la celda combinada (rowSpan).
+      if (data.section !== "body") return;
+      if (data.column.index !== 0 && data.column.index !== 1) return;
+      const raw = data.cell.raw as { label?: string; rowSpan?: number } | undefined;
+      if (!raw || !raw.label || !raw.rowSpan) return;
+      const { x, y: cy, width, height } = data.cell;
+      const centerX = x + width / 2;
+      const centerY = cy + height / 2;
+      const gs = doc as unknown as { saveGraphicsState(): void; restoreGraphicsState(): void };
+      gs.saveGraphicsState();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(data.column.index === 0 ? 9 : 8);
+      doc.setTextColor(255, 255, 255);
+      // Rota el texto 90° alrededor del centro de la celda combinada.
+      doc.text(raw.label, centerX, centerY, {
+        angle: 90,
+        align: "center",
+        baseline: "middle",
+      });
+      gs.restoreGraphicsState();
     },
     theme: "grid",
   });
