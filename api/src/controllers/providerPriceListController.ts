@@ -359,22 +359,12 @@ async function syncHqStockInline(
  * aumento por encima. Fallback a Con IVA directo solo si la planilla no trae
  * Sin IVA (algunas filas de página 7 solo tienen Con IVA).
  */
-const isRoyalCanin = (marca?: string | null): boolean =>
-  /^ROYAL CANIN$/i.test((marca ?? "").trim());
-
 const resolveSalePrice = (
   sinIva: number | null | undefined,
   conIva: number | null | undefined,
-  marca?: string | null,
 ): number | null => {
-  if (sinIva != null) {
-    const conIvaBase = round2(sinIva * 1.21);
-    // Royal Canin: 21% IVA + 15% de ganancia extra sobre el mayorista.
-    return isRoyalCanin(marca) ? round2(conIvaBase * 1.15) : conIvaBase;
-  }
-  if (conIva != null) {
-    return isRoyalCanin(marca) ? round2(conIva * 1.15) : round2(conIva);
-  }
+  if (sinIva != null) return round2(sinIva * 1.21);
+  if (conIva != null) return round2(conIva);
   return null;
 };
 
@@ -546,7 +536,7 @@ async function applyPriceListCore(
         const product = await tx.product.create({
           data: {
             name: normalizeProductName(r.nombre),
-            price: roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva, r.marca) ?? 0),
+            price: roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva) ?? 0),
             quantity: 0,
             categoryId: null,
             organizationId,
@@ -621,7 +611,7 @@ async function applyPriceListCore(
         ),
       };
       if (applyPrices && (r.precioSinIva != null || r.precioConIva != null)) {
-        data.price = roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva, r.marca)!);
+        data.price = roundBolsaPriceIfHigh(resolveSalePrice(r.precioSinIva, r.precioConIva)!);
         priceUpdated++;
       }
       if (rowTouchesProducts(r)) {
