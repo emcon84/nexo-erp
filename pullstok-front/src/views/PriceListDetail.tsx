@@ -42,9 +42,13 @@ const formatPrice = (n: number | null | undefined) =>
         maximumFractionDigits: 2,
       })}`;
 
-/** Precio mayorista = precio sin IVA + 21% (para imprimir la planilla). */
-const precioMayorista = (sinIva: number | null | undefined): number | null =>
-  sinIva == null ? null : Math.round(sinIva * 1.21 * 100) / 100;
+/** Precio mayorista = precio sin IVA + 21%, redondeado al múltiplo de 100
+ * (mismo criterio que roundBolsaPriceIfHigh del backend: si >= 500). */
+const precioMayorista = (sinIva: number | null | undefined): number | null => {
+  if (sinIva == null) return null;
+  const bruto = Math.round(sinIva * 1.21 * 100) / 100;
+  return bruto >= 500 ? Math.round(bruto / 100) * 100 : bruto;
+};
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-AR", {
