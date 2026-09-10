@@ -58,6 +58,17 @@ export const tallaOf = (line: string | null): string => {
   return line ?? "";
 };
 
+/** TALLA derivada del NOMBRE (para filas sin sección): SOLO etapas conocidas,
+ * sino null. Evita que un nombre sin etapa se vuelva un "título" raro. */
+export const tallaFromName = (nombre: string): string | null => {
+  const n = (nombre ?? "").toUpperCase();
+  if (/\bPUPPY\b/.test(n)) return "CACHORROS";
+  if (/\bADULT\b|\bADULTO\b/.test(n)) return "ADULTOS";
+  if (/\bSENIOR\b/.test(n)) return "SENIOR";
+  if (/\bKITTEN\b|\bGATO\b/.test(n)) return "GATOS";
+  return null;
+};
+
 /** Razas (Pequeñas/Medianas/Grandes) derivadas del nombre o sublínea. */
 export const razasOf = (nombre: string, subline: string | null): string | null => {
   const n = nombre.toUpperCase();

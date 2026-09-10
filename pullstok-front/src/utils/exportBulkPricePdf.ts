@@ -12,7 +12,7 @@ import {
   formatPrice,
   esHumedito,
   displayName,
-  tallaOf,
+  tallaFromName,
   razasOf,
   TALLA_COLORS,
   RAZAS_COLORS,
@@ -55,7 +55,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
   const withGroups = rows.map((r) => ({
     r,
     brand: (r.brandValues?.join(", ") || "Sin marca").trim() || "Sin marca",
-    talla: tallaOf(r.name),
+    talla: tallaFromName(r.name) ?? "",
     razas: razasOf(r.name, null),
     humedo: esHumedito(r.name),
   }));
@@ -80,8 +80,10 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
         byTalla.get(p.talla)!.push(p);
       }
       for (const [talla, tp] of byTalla) {
-        const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
-        body.push([{ content: talla || brand, colSpan: 2, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
+        if (talla) {
+          const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
+          body.push([{ content: talla, colSpan: 2, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
+        }
         const byRazas = new Map<string | null, typeof tp>();
         for (const p of tp) {
           const k = p.razas;
