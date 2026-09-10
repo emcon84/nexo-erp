@@ -710,6 +710,16 @@ export const bulkPriceUpdateSchema = z
         percentage: z.coerce.number().min(-100, "Mínimo -100%").max(500, "Máximo 500%"),
       }))
       .default([]),
+    // Ganancia por SECCIÓN de planilla (línea del PDF): margen propio por línea
+    // (ej. medicados con ganancia distinta). Se combina multiplicativamente con
+    // el % de aumento de esa línea: precio × (1+margin/100) × (1+percentage/100).
+    // Precedencia product > section > global. Vacío/ausente → sin overrides.
+    sectionMargins: z
+      .array(z.object({
+        sectionId: z.string().uuid("Sección de planilla inválida"),
+        margin: z.coerce.number().min(0, "Mínimo 0%").max(500, "Máximo 500%"),
+      }))
+      .default([]),
     // Overrides por categoría/producto (sdd/bulk-price-overrides): % propio por
     // nodo de categoría y por fila de producto. Precedencia product > category
     // > global (percentage). 0% = incluido pero sin cambio; exclusión =

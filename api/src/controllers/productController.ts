@@ -1312,6 +1312,34 @@ export async function resolveSectionPercentageByProduct(
 }
 
 /**
+ * Mapa productId → ganancia (margin) por sección de planilla (línea del PDF).
+ * Mismo patrón que resolveSectionPercentageByProduct: solo filas con productId
+ * (los productos matcheados a esa línea). Vacío → Map vacío.
+ */
+export async function resolveSectionMarginByProduct(
+  tx: any,
+  orgId: string,
+  sectionMargins: { sectionId: string; margin: number }[],
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (sectionMargins.length === 0) return map;
+  const marginBySection = new Map(sectionMargins.map((s) => [s.sectionId, s.margin]));
+  const entries = (await tx.priceListEntry.findMany({
+    where: {
+      section: { id: { in: [...marginBySection.keys()] }, priceList: { organizationId: orgId } },
+      productId: { not: null },
+    },
+    select: { productId: true, sectionId: true },
+  })) as { productId: string | null; sectionId: string }[];
+  for (const e of entries) {
+    if (e.productId && !map.has(e.productId)) {
+      map.set(e.productId, marginBySection.get(e.sectionId)!);
+    }
+  }
+  return map;
+}
+
+/**
  * Mapa id → parentId de todas las categorías de la org. Lo usan preview y
  * apply para caminar ancestros al resolver el % efectivo de un producto
  * (override de categoría hereda a TODO su subtree: nodo y descendientes).
@@ -1355,6 +1383,22 @@ export function resolveEffectivePercentage(a: {
   return a.globalPct;
 }
 
+/**
+ * Ganancia (margin) efectiva de un producto: ganancia por sección de planilla
+ * (línea del PDF, ej. medicados con margen distinto) > ganancia global. Si no
+ * hay ninguna, 0 (back-compat). Se combina multiplicativamente con el % de
+ * aumento: precio × (1+margin/100) × (1+percentage/100).
+ */
+export function resolveEffectiveMargin(
+  productId: string,
+  sectionMargins: ReadonlyMap<string, number>,
+  globalMargin: number | undefined,
+): number {
+  const sectionMargin = sectionMargins.get(productId);
+  if (sectionMargin !== undefined) return sectionMargin;
+  return globalMargin ?? 0;
+}
+
 export const bulkPriceUpdate = async (req: Request, res: Response) => {
   try {
     const {
@@ -1369,6 +1413,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
       categoryPercentages = [],
       productPercentages = [],
       sectionPercentages = [],
+      sectionMargins = [],
     } = req.body as {
       brandValues: string[];
       percentage?: number;
@@ -1381,6 +1426,7 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
       categoryPercentages?: { categoryId: string; percentage: number }[];
       productPercentages?: { productId: string; percentage: number }[];
       sectionPercentages?: { sectionId: string; percentage: number }[];
+      sectionMargins?: { sectionId: string; margin: number }[];
     };
     const dryRun = req.query.dryRun === "true";
     const organizationId = requireOrganizationId();
@@ -1424,6 +1470,12 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
       organizationId,
       sectionPercentages,
     );
+    // Ganancia por sección de planilla (línea del PDF): mapa productId → margin.
+    const sectionMarginMap = await resolveSectionMarginByProduct(
+      prisma,
+      organizationId,
+      sectionMargins,
+    );
 
     const products = await prisma.product.findMany({
       where,
@@ -1452,7 +1504,8 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
         categoryPercentages: catPctMap,
         globalPct,
       });
-      const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage, margin ?? 0));
+      const effectiveMargin = resolveEffectiveMargin(p.id, sectionMarginMap, margin);
+      const newPrice = roundBolsaPriceIfHigh(computeNewPrice(oldPrice, effectivePercentage, effectiveMargin));
       return {
         id: p.id,
         name: p.name,
@@ -1493,6 +1546,11 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
           organizationId,
           sectionPercentages,
         );
+        const sectionMarginMapTx = await resolveSectionMarginByProduct(
+          tx,
+          organizationId,
+          sectionMargins,
+        );
         const rowsTx = await tx.product.findMany({
           where: buildBulkPriceWhere(
             brandValues,
@@ -1524,9 +1582,10 @@ export const bulkPriceUpdate = async (req: Request, res: Response) => {
             categoryPercentages: catPctMap,
             globalPct,
           });
+          const effectiveMargin = resolveEffectiveMargin(r.id, sectionMarginMapTx, margin);
           return {
             id: r.id,
-            newPrice: roundBolsaPriceIfHigh(computeNewPrice(Number(r.price), effective, margin ?? 0)),
+            newPrice: roundBolsaPriceIfHigh(computeNewPrice(Number(r.price), effective, effectiveMargin)),
           };
         });
         await Promise.all(

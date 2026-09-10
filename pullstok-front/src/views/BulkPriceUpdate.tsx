@@ -118,6 +118,9 @@ export const BulkPriceUpdate = () => {
   // Overrides de % por LÍNEA de planilla (grupo brand|line): clave = g.key,
   // valor = string del input (vacío = sin override).
   const [sectionOverrides, setSectionOverrides] = useState<Record<string, string>>({});
+  // Overrides de GANANCIA por LÍNEA de planilla (grupo brand|line): margen
+  // propio por línea (ej. medicados con ganancia distinta).
+  const [sectionMargins, setSectionMargins] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -306,6 +309,17 @@ export const BulkPriceUpdate = () => {
         const pct = parseFloat(value);
         return group.ids.map((sectionId) => ({ sectionId, percentage: pct }));
       });
+    // Overrides de GANANCIA por línea de planilla: se expanden de grupo
+    // (brand|line) a TODAS las sectionIds del grupo. El server mapea sectionId
+    // → productId y combina multiplicativamente con el % de aumento.
+    const sectionMargins = Object.entries(sectionMarginsState)
+      .filter(([, value]) => value.trim() !== "" && !Number.isNaN(parseFloat(value)))
+      .flatMap(([key, value]) => {
+        const group = sectionGroups.find((g) => g.key === key);
+        if (!group) return [];
+        const margin = parseFloat(value);
+        return group.ids.map((sectionId) => ({ sectionId, margin }));
+      });
     return {
       brandValues: selectedBrands,
       categoryIds,
@@ -318,6 +332,7 @@ export const BulkPriceUpdate = () => {
       categoryPercentages,
       productPercentages,
       sectionPercentages,
+      sectionMargins,
     };
   }, [
     selectedBrands,
@@ -331,6 +346,7 @@ export const BulkPriceUpdate = () => {
     categoryOverrides,
     productOverrides,
     sectionOverrides,
+    sectionMarginsState,
     sectionGroups,
   ]);
 
@@ -578,7 +594,7 @@ export const BulkPriceUpdate = () => {
                   </div>
                   {selectedSectionGroups.length > 0 && (
                     <div className="space-y-3 rounded-md border p-3">
-                      <p className="text-sm font-medium">Porcentaje por línea</p>
+                      <p className="text-sm font-medium">Porcentaje y ganancia por línea</p>
                       <ul className="space-y-2">
                         {selectedSectionGroups.map((g) => (
                           <li key={g.key} className="flex items-center gap-2">
@@ -594,12 +610,29 @@ export const BulkPriceUpdate = () => {
                               step="0.5"
                               min="-100"
                               max="500"
-                              className="h-8 w-24"
+                              className="h-8 w-20"
                               value={sectionOverrides[g.key] ?? ""}
-                              placeholder="%"
+                              placeholder="% aum"
                               aria-label={`Porcentaje ${g.label}`}
                               onChange={(e) =>
                                 setSectionOverrides((prev) => ({
+                                  ...prev,
+                                  [g.key]: e.target.value,
+                                }))
+                              }
+                            />
+                            <Input
+                              id={`sec-margin-${g.key}`}
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              max="500"
+                              className="h-8 w-20"
+                              value={sectionMarginsState[g.key] ?? ""}
+                              placeholder="ganancia"
+                              aria-label={`Ganancia ${g.label}`}
+                              onChange={(e) =>
+                                setSectionMarginsState((prev) => ({
                                   ...prev,
                                   [g.key]: e.target.value,
                                 }))
@@ -609,8 +642,9 @@ export const BulkPriceUpdate = () => {
                         ))}
                       </ul>
                       <p className="text-xs text-muted-foreground">
-                        El porcentaje de la línea reemplaza al default para sus
-                        productos (no se suma).
+                        El % de aumento y la ganancia de la línea reemplazan al default
+                        para sus productos (no se suman). Ganancia multiplicativa:
+                        precio × (1 + ganancia/100) × (1 + % aumento/100).
                       </p>
                     </div>
                   )}

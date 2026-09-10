@@ -444,6 +444,10 @@ export interface BulkPriceUpdatePayload {
   /** Overrides de % por sección de planilla (línea del PDF): precedencia
    * product > section > category > global. OPCIONAL. */
   sectionPercentages?: { sectionId: string; percentage: number }[];
+  /** Overrides de GANANCIA por sección de planilla (línea del PDF): margen
+   * propio por línea (ej. medicados). OPCIONAL. Se combina multiplicativamente
+   * con el % de aumento de la línea. */
+  sectionMargins?: { sectionId: string; margin: number }[];
   /** Global opcional: sin valor el server resuelve 0 para productos sin override. */
   percentage?: number;
   /** Ganancia global (multiplicativa): precio_final = precio × (1+margin/100) ×
