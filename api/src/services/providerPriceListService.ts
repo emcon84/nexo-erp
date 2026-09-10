@@ -583,23 +583,27 @@ function parseDataRow(
   // Get text before the first price
   const priceMatch = /([\d.,]+)\t\$\s*([\d.,]+)\t\$\s*$/.exec(line);
   const beforePrice = line.slice(0, priceMatch!.index).trim();
+  // La etiqueta de sección (HÚMEDO/SECO/WET) a veces encabeza la fila y no es
+  // parte del producto → se quita antes de detectar el código, así el SKU que
+  // viene después ("3390102") se corta y no queda pegado al nombre.
+  const nameText = beforePrice.replace(/^(?:HÚMEDO|HUMEDO|SECO|WET)\s+/i, "");
 
   // Extract code: SKU alfanumérico de Royal Canin pegado al inicio (CW34H,
   // DA68F, DF10W...) o run de 5-8 dígitos puros al inicio del nombre. El
   // alfanumérico antes se escapaba y quedaba pegado al nombre del producto
   // (bug de nombres raros). El fallback se ancla al inicio para NO matchear el
   // precio como código cuando la fila no tiene SKU (ej. Eukanuba).
-  const alphaSku = /^([A-Z]{2}\d{2,3}[A-Z]?)\b/.exec(beforePrice);
-  const codeMatch = alphaSku ?? /^(\d{5,8})\b/.exec(beforePrice);
+  const alphaSku = /^([A-Z]{2}\d{2,3}[A-Z]?)\b/.exec(nameText);
+  const codeMatch = alphaSku ?? /^(\d{5,8})\b/.exec(nameText);
   const codigo = codeMatch ? codeMatch[1] : null;
 
   // Separate prefix (gama/hierarchy before code) from description+kg (after code)
   let prefix: string | null = null;
-  let remaining = beforePrice;
+  let remaining = nameText;
   if (codeMatch) {
     const codeEnd = codeMatch.index + codeMatch[0].length;
-    prefix = beforePrice.slice(0, codeMatch.index).trim() || null;
-    remaining = beforePrice.slice(codeEnd).trim();
+    prefix = nameText.slice(0, codeMatch.index).trim() || null;
+    remaining = nameText.slice(codeEnd).trim();
   }
 
   // Limpieza del nombre: quitar código de línea RC y palabras compuestas.

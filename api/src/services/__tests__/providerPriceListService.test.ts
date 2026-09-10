@@ -50,4 +50,15 @@ describe("parsePriceList — limpieza de nombres raros", () => {
     expect(rows[0].nombre).toBe("Mother & Babycat X 0.4 KG");
     expect(rows[1].nombre).toBe("Mother & Babycat X 1.5 KG");
   });
+
+  it("saca la etiqueta de sección (HÚMEDO) y el código del nombre", () => {
+    const { rows } = royalCanin(
+      "HÚMEDO 3390102 URINARY SO FELINE WET POUCH (12X85G) X 1.02 KG\t1120\t$1355\t$",
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].nombre).toBe(
+      "URINARY SO FELINE WET POUCH (12X85G) X 1.02 KG",
+    );
+    expect(rows[0].codigo).toBe("3390102");
+  });
 });

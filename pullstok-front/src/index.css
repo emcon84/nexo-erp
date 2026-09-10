@@ -182,10 +182,30 @@
     color: #000 !important;
     border-color: #000 !important;
   }
+  /* La tabla del área imprimible ajusta al ancho de la hoja y deja envolver el
+     nombre del producto (evita scroll/columns cortadas al imprimir). */
+  .print-area table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+  .print-area th,
+  .print-area td {
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+  }
   /* Las tablas fluyen entre hojas: solo evitamos cortar una fila a la
      mitad, nunca saltos de página forzados entre marcas/secciones. */
   .print-area tr {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  /* Páginas en blanco: el resto del contenido queda oculto con visibility pero
+     SIGUE ocupando altura (la planilla en pantalla es larga). Se colapsa #root
+     a 0 con overflow hidden; el área imprimible es position:absolute (su
+     containing block es el viewport, no #root), así que no se recorta. */
+  #root {
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
 }
