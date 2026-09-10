@@ -53,39 +53,114 @@ const loadLogo = async (
 
 const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [number, number, number] };
 
-/** Arma el body: SECO/HÚMEDO → marca → talla → razas → productos (con precios). */
+interface RowWithGroups {
+  r: BulkPricePreviewRow;
+  brand: string;
+  levels: string[];
+  humedo: boolean;
+}
+
+/** ¿Es alimento de PERRO? (CANINE/DOG/PERRO y no gato). */
+const esPerro = (nombre: string): boolean =>
+  /\b(CANINE|DOG|PERRO)\b/.test(nombre) &&
+  !/\b(CAT|GATO|FELINE|KITTEN|BABYCAT|INDOOR|PERSIAN|SIAMESE)\b/.test(nombre);
+
+/** Etapa del perro (Cachorro/Adulto/Senior). */
+const etapaPerro = (nombre: string): string => {
+  const n = (nombre ?? "").toUpperCase();
+  if (/\bPUPPY\b/.test(n)) return "Cachorro";
+  if (/\bADULT\b|\bADULTO\b/.test(n)) return "Adulto";
+  if (/\bSENIOR\b/.test(n)) return "Senior";
+  return "";
+};
+
+/** Tamaño del perro (Peq/Med/Grande). */
+const tamanoPerro = (nombre: string): string => {
+  const n = (nombre ?? "").toUpperCase();
+  if (/\b(SMALL BREED|SMALL\b|MINI|X-SMALL)\b/.test(n)) return "Peq";
+  if (/\b(MEDIUM BREED|MEDIUM\b)\b/.test(n)) return "Med";
+  if (/\b(LARGE BREED|MAXI|GIANT)\b/.test(n)) return "Grande";
+  return "";
+};
+
+/** Arma el body: SECO/HÚMEDO → marca → [PERRO → etapa → tamaño] o [talla →
+ * razas] → productos (con precios). */
 const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
-  // cada fila con su marca/talla/razas desde la SECCIÓN de planilla (igual que
-  // la mayorista); si no hay sección, se deriva del nombre. Se excluyen los
-  // productos no-alimento (limpieza, piedra sanitaria) y se normaliza la marca
-  // a mayúsculas para que "Royal Canin" y "ROYAL CANIN" se fusionen.
-  const withGroups = rows
+  const withGroups: RowWithGroups[] = rows
     .filter((r) => !isNonFood(r.name, null))
-    .map((r) => ({
-      r,
-      brand: (() => {
+    .map((r) => {
+      const brand = (() => {
         const raw =
           r.brand?.trim() ||
           (r.brandValues?.join(", ") || "Sin marca").trim() ||
           "Sin marca";
         return raw === "Sin marca" ? "Sin marca" : raw.toUpperCase();
-      })(),
-      talla:
+      })();
+      const talla =
         tallaOf(normalizeLine(r.line ?? null)) ||
         lineFromName(r.name) ||
         tallaFromName(r.name) ||
-        "",
-      razas: razasOf(r.name, r.subline ?? null),
-      humedo: esHumedito(r.name),
-    }));
+        "";
+      const razas = razasOf(r.name, r.subline ?? null);
+      const perro = esPerro(r.name);
+      const levels = perro
+        ? ["PERRO", etapaPerro(r.name) || "", tamanoPerro(r.name) || ""]
+        : [talla || "", razas || "", ""];
+      return { r, brand, levels, humedo: esHumedito(r.name) };
+    });
 
   const body: (string | GroupRow)[][] = [];
+  const LEVEL_COLORS: Record<string, [number, number, number]> = {
+    ...TALLA_COLORS,
+    ...RAZAS_COLORS,
+    PERRO: [17, 24, 39],
+    Cachorro: [88, 28, 135],
+    Adulto: [17, 24, 39],
+    Senior: [30, 58, 138],
+    Peq: [107, 33, 168],
+    Med: [180, 83, 9],
+    Grande: [14, 116, 144],
+  };
 
-  const pushBlock = (label: string, list: typeof withGroups) => {
+  const pushLevels = (items: RowWithGroups[], levelIdx: number) => {
+    const by = new Map<string, RowWithGroups[]>();
+    for (const p of items) {
+      const k = p.levels[levelIdx] ?? "";
+      if (!by.has(k)) by.set(k, []);
+      by.get(k)!.push(p);
+    }
+    for (const [k, sub] of by) {
+      if (k) {
+        body.push([{
+          content: k,
+          colSpan: 2,
+          styles: {
+            fontSize: levelIdx === 0 ? 9.5 : 8.5,
+            fontStyle: "bold",
+            fillColor: LEVEL_COLORS[k] ?? [100, 116, 139],
+            textColor: [255, 255, 255],
+            cellPadding: levelIdx === 0 ? 3.5 : 3,
+          },
+        }]);
+      }
+      if (levelIdx < 2) {
+        pushLevels(sub, levelIdx + 1);
+      } else {
+        for (const p of sub) {
+          body.push([
+            displayName(p.r.name, p.brand),
+            formatPrice(p.r.newPrice),
+          ] as unknown as GroupRow[]);
+        }
+      }
+    }
+  };
+
+  const pushBlock = (label: string, list: RowWithGroups[]) => {
     if (list.length === 0) return;
     body.push([{ content: label, colSpan: 2, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
 
-    const byBrand = new Map<string, typeof list>();
+    const byBrand = new Map<string, RowWithGroups[]>();
     for (const p of list) {
       if (!byBrand.has(p.brand)) byBrand.set(p.brand, []);
       byBrand.get(p.brand)!.push(p);
@@ -93,35 +168,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
     for (const [brand, prods] of byBrand) {
       const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
       body.push([{ content: brand, colSpan: 2, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
-      const byTalla = new Map<string, typeof prods>();
-      for (const p of prods) {
-        if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
-        byTalla.get(p.talla)!.push(p);
-      }
-      for (const [talla, tp] of byTalla) {
-        if (talla) {
-          const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
-          body.push([{ content: talla, colSpan: 2, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
-        }
-        const byRazas = new Map<string | null, typeof tp>();
-        for (const p of tp) {
-          const k = p.razas;
-          if (!byRazas.has(k)) byRazas.set(k, []);
-          byRazas.get(k)!.push(p);
-        }
-        for (const [razas, rp] of byRazas) {
-          if (razas) {
-            const rColor = RAZAS_COLORS[razas] ?? [100, 116, 139];
-            body.push([{ content: razas, colSpan: 2, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
-          }
-          for (const p of rp) {
-            body.push([
-              displayName(p.r.name, p.brand),
-              formatPrice(p.r.newPrice),
-            ] as unknown as GroupRow[]);
-          }
-        }
-      }
+      pushLevels(prods, 0);
     }
   };
 
