@@ -12,11 +12,6 @@ import {
   formatPrice,
   esHumedito,
   displayName,
-  normalizeLine,
-  tallaOf,
-  tallaFromName,
-  lineFromName,
-  razasOf,
   isNonFood,
   TALLA_COLORS,
   RAZAS_COLORS,
@@ -60,31 +55,48 @@ interface RowWithGroups {
   humedo: boolean;
 }
 
-/** ¿Es alimento de PERRO? (CANINE/DOG/PERRO y no gato). */
+/** ¿Es alimento MEDICADO/veterinario? (se agrupa aparte de PERRO/GATO). */
+const MEDICADO_KEYWORDS =
+  /\b(VETERINARY|HYPOALLERGENIC|ANALLERGENIC|RENAL|GASTRO|HEPATIC|URINARY|DIABETIC|CARDIAC|MOBILITY|SATIETY|RECOVERY|FIBRE|CALM|WEIGHT CONTROL|DERMATO|NEUTERED|MATURE)\b/i;
+const esMedicado = (nombre: string): boolean => MEDICADO_KEYWORDS.test(nombre);
+
+/** ¿Es alimento de PERRO (no medicado)? */
 const esPerro = (nombre: string): boolean =>
-  /\b(CANINE|DOG|PERRO)\b/.test(nombre) &&
-  !/\b(CAT|GATO|FELINE|KITTEN|BABYCAT|INDOOR|PERSIAN|SIAMESE)\b/.test(nombre);
+  !esMedicado(nombre) && /\b(CANINE|DOG|PERRO)\b/.test(nombre);
 
-/** Etapa del perro (Cachorro/Adulto/Senior). */
-const etapaPerro = (nombre: string): string => {
+/** ¿Es alimento de GATO (no medicado)? */
+const esGato = (nombre: string): boolean =>
+  !esMedicado(nombre) &&
+  /\b(CAT|GATO|FELINE|KITTEN|BABYCAT|INDOOR|PERSIAN|SIAMESE|EXIGENT|SENSIBLE|LONGHAIR|POUCH|LATA|MOUSSE)\b/.test(nombre);
+
+/** Etapa (CACHORRO/ADULTO/GATITO/SENIOR). */
+const etapa = (nombre: string): string => {
   const n = (nombre ?? "").toUpperCase();
-  if (/\bPUPPY\b/.test(n)) return "Cachorro";
-  if (/\bADULT\b|\bADULTO\b/.test(n)) return "Adulto";
-  if (/\bSENIOR\b/.test(n)) return "Senior";
+  if (/\bPUPPY\b/.test(n)) return "CACHORRO";
+  if (/\bKITTEN\b/.test(n)) return "GATITO";
+  if (/\bADULT\b|\bADULTO\b/.test(n)) return "ADULTO";
+  if (/\bSENIOR\b/.test(n)) return "SENIOR";
   return "";
 };
 
-/** Tamaño del perro (Peq/Med/Grande). */
-const tamanoPerro = (nombre: string): string => {
+/** Tamaño (PEQ/MED/GRANDE). */
+const tamano = (nombre: string): string => {
   const n = (nombre ?? "").toUpperCase();
-  if (/\b(SMALL BREED|SMALL\b|MINI|X-SMALL)\b/.test(n)) return "Peq";
-  if (/\b(MEDIUM BREED|MEDIUM\b)\b/.test(n)) return "Med";
-  if (/\b(LARGE BREED|MAXI|GIANT)\b/.test(n)) return "Grande";
+  if (/\b(SMALL BREED|SMALL\b|MINI|X-SMALL)\b/.test(n)) return "PEQ";
+  if (/\b(MEDIUM BREED|MEDIUM\b)\b/.test(n)) return "MED";
+  if (/\b(LARGE BREED|MAXI|GIANT)\b/.test(n)) return "GRANDE";
   return "";
 };
 
-/** Arma el body: SECO/HÚMEDO → marca → [PERRO → etapa → tamaño] o [talla →
- * razas] → productos (con precios). */
+/** Determina los niveles de agrupación (marca → cat → etapa → tamaño). */
+const levelsOf = (nombre: string): string[] => {
+  if (esMedicado(nombre)) return ["MEDICADOS", "", ""];
+  if (esPerro(nombre)) return ["PERRO", etapa(nombre), tamano(nombre)];
+  if (esGato(nombre)) return ["GATO", etapa(nombre), tamano(nombre)];
+  return ["OTROS", "", ""];
+};
+
+/** Arma el body: SECO/HÚMEDO → marca → PERRO/GATO/MEDICADOS → etapa → tamaño. */
 const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
   const withGroups: RowWithGroups[] = rows
     .filter((r) => !isNonFood(r.name, null))
@@ -96,16 +108,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
           "Sin marca";
         return raw === "Sin marca" ? "Sin marca" : raw.toUpperCase();
       })();
-      const talla =
-        tallaOf(normalizeLine(r.line ?? null)) ||
-        lineFromName(r.name) ||
-        tallaFromName(r.name) ||
-        "";
-      const razas = razasOf(r.name, r.subline ?? null);
-      const perro = esPerro(r.name);
-      const levels = perro
-        ? ["PERRO", etapaPerro(r.name) || "", tamanoPerro(r.name) || ""]
-        : [talla || "", razas || "", ""];
+      const levels = levelsOf(r.name);
       return { r, brand, levels, humedo: esHumedito(r.name) };
     });
 
@@ -114,12 +117,16 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
     ...TALLA_COLORS,
     ...RAZAS_COLORS,
     PERRO: [17, 24, 39],
-    Cachorro: [88, 28, 135],
-    Adulto: [17, 24, 39],
-    Senior: [30, 58, 138],
-    Peq: [107, 33, 168],
-    Med: [180, 83, 9],
-    Grande: [14, 116, 144],
+    GATO: [126, 34, 206],
+    MEDICADOS: [146, 64, 14],
+    OTROS: [100, 116, 139],
+    CACHORRO: [88, 28, 135],
+    GATITO: [88, 28, 135],
+    ADULTO: [17, 24, 39],
+    SENIOR: [30, 58, 138],
+    PEQ: [107, 33, 168],
+    MED: [180, 83, 9],
+    GRANDE: [14, 116, 144],
   };
 
   const pushLevels = (items: RowWithGroups[], levelIdx: number) => {
