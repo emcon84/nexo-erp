@@ -151,10 +151,10 @@ export const exportBulkPricePdf = async (
   const rightX = pageW - margin;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text("Actualización masiva de precios", rightX, y + 20, { align: "right" });
+  doc.text("Precios", rightX, y + 20, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`${new Date().toLocaleDateString("es-AR")} · ${rows.length} productos`, rightX, y + 31, { align: "right" });
+  doc.text(new Date().toLocaleDateString("es-AR"), rightX, y + 31, { align: "right" });
   y += 52;
 
   autoTable(doc, {
