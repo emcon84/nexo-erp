@@ -65,8 +65,8 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     render(<PrintPriceList plan={plan} />);
     expect(screen.getByText("Precio")).toBeInTheDocument();
     expect(screen.getByText("Sugerido")).toBeInTheDocument();
-    expect(screen.getByText("$ 10.642,00")).toBeInTheDocument(); // Con IVA del proveedor
-    expect(screen.getByText("$ 14.190,04")).toBeInTheDocument(); // sugerido
+    expect(screen.getByText("$ 10.600,00")).toBeInTheDocument(); // mayorista sin IVA +21% → múltiplo de 100
+    expect(screen.getByText("$ 14.200,00")).toBeInTheDocument(); // sugerido redondeado a múltiplo de 100
     // e2 no tiene sugerido → "—".
     const filaSinSugerido = screen.getByText("SIEGER Puppy Mini x 3 Kg.").closest("tr");
     expect(filaSinSugerido).toHaveTextContent("—");

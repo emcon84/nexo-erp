@@ -22,12 +22,18 @@ const formatPrice = (n: number | null | undefined) =>
         maximumFractionDigits: 2,
       })}`;
 
-/** Precio mayorista = precio sin IVA + 21%, redondeado al múltiplo de 100
- * (mismo criterio que roundBolsaPriceIfHigh del backend: si >= 500). */
+/** Redondea a múltiplo de 100 cuando el precio es >= 500 (mismo criterio que
+ * roundBolsaPriceIfHigh del backend); debajo de ese piso se conserva tal cual. */
+const redondearPrecio = (n: number | null | undefined): number | null => {
+  if (n == null) return null;
+  return n >= 500 ? Math.round(n / 100) * 100 : n;
+};
+
+/** Precio mayorista = precio sin IVA + 21%, redondeado al múltiplo de 100. */
 const precioMayorista = (sinIva: number | null | undefined): number | null => {
   if (sinIva == null) return null;
   const bruto = Math.round(sinIva * 1.21 * 100) / 100;
-  return bruto >= 500 ? Math.round(bruto / 100) * 100 : bruto;
+  return redondearPrecio(bruto);
 };
 
 const formatPeriod = (period: string | null) =>
@@ -87,7 +93,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
                     {formatPrice(precioMayorista(entry.priceSinIva))}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {formatPrice(entry.suggestedPrice)}
+                    {formatPrice(redondearPrecio(entry.suggestedPrice))}
                   </TableCell>
                 </TableRow>
               ))}

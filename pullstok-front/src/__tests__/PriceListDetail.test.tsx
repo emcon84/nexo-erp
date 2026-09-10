@@ -108,7 +108,7 @@ describe("PriceListDetail — detalle, edición y ajuste masivo", () => {
         .length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("SIEGER Puppy Mini x 1 Kg.").length).toBeGreaterThan(0);
-    expect(screen.getByText("Precio (Con IVA)")).toBeInTheDocument();
+    expect(screen.getByText("Precio mayorista")).toBeInTheDocument();
     expect(mockGet).toHaveBeenCalledWith("pl-1");
   });
 
