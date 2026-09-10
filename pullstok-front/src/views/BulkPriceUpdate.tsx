@@ -120,7 +120,7 @@ export const BulkPriceUpdate = () => {
   const [sectionOverrides, setSectionOverrides] = useState<Record<string, string>>({});
   // Overrides de GANANCIA por LÍNEA de planilla (grupo brand|line): margen
   // propio por línea (ej. medicados con ganancia distinta).
-  const [sectionMargins, setSectionMargins] = useState<Record<string, string>>({});
+  const [sectionMarginsState, setSectionMarginsState] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     [],
   );
