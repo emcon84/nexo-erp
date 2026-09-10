@@ -16,6 +16,7 @@ import {
   tallaOf,
   tallaFromName,
   razasOf,
+  isNonFood,
   TALLA_COLORS,
   RAZAS_COLORS,
   BRAND_COLORS,
@@ -54,18 +55,25 @@ const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [n
 /** Arma el body: SECO/HÚMEDO → marca → talla → razas → productos (con precios). */
 const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
   // cada fila con su marca/talla/razas desde la SECCIÓN de planilla (igual que
-  // la mayorista); si no hay sección, se deriva del nombre.
-  const withGroups = rows.map((r) => ({
-    r,
-    brand:
-      r.brand?.trim() ||
-      (r.brandValues?.join(", ") || "Sin marca").trim() ||
-      "Sin marca",
-    talla:
-      tallaOf(normalizeLine(r.line ?? null)) || tallaFromName(r.name) || "",
-    razas: razasOf(r.name, r.subline ?? null),
-    humedo: esHumedito(r.name),
-  }));
+  // la mayorista); si no hay sección, se deriva del nombre. Se excluyen los
+  // productos no-alimento (limpieza, piedra sanitaria) y se normaliza la marca
+  // a mayúsculas para que "Royal Canin" y "ROYAL CANIN" se fusionen.
+  const withGroups = rows
+    .filter((r) => !isNonFood(r.name, null))
+    .map((r) => ({
+      r,
+      brand: (() => {
+        const raw =
+          r.brand?.trim() ||
+          (r.brandValues?.join(", ") || "Sin marca").trim() ||
+          "Sin marca";
+        return raw === "Sin marca" ? "Sin marca" : raw.toUpperCase();
+      })(),
+      talla:
+        tallaOf(normalizeLine(r.line ?? null)) || tallaFromName(r.name) || "",
+      razas: razasOf(r.name, r.subline ?? null),
+      humedo: esHumedito(r.name),
+    }));
 
   const body: (string | GroupRow)[][] = [];
 
