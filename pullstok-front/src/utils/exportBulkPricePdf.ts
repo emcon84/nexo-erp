@@ -15,6 +15,7 @@ import {
   normalizeLine,
   tallaOf,
   tallaFromName,
+  lineFromName,
   razasOf,
   isNonFood,
   TALLA_COLORS,
@@ -70,7 +71,10 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
         return raw === "Sin marca" ? "Sin marca" : raw.toUpperCase();
       })(),
       talla:
-        tallaOf(normalizeLine(r.line ?? null)) || tallaFromName(r.name) || "",
+        tallaOf(normalizeLine(r.line ?? null)) ||
+        lineFromName(r.name) ||
+        tallaFromName(r.name) ||
+        "",
       razas: razasOf(r.name, r.subline ?? null),
       humedo: esHumedito(r.name),
     }));

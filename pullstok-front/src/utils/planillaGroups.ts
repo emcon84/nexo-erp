@@ -69,6 +69,26 @@ export const tallaFromName = (nombre: string): string | null => {
   return null;
 };
 
+/** Categoría/linha (FELINE/CANINE/VETERINARY) derivada del NOMBRE, como
+ * respaldo cuando la sección no trae la línea. Los nombres de Royal Canin la
+ * traen clara. */
+const VET_KEYWORDS =
+  /\b(VETERINARY|HYPOALLERGENIC|ANALLERGENIC|RENAL|GASTRO|HEPATIC|URINARY|SATIETY|DIABETIC|MOBILITY|CARDIAC|FIBRE|CALM|RECOVERY)\b/;
+const FELINE_KEYWORDS =
+  /\b(CAT|GATO|FELINE|KITTEN|BABYCAT|INDOOR|PERSIAN|SIAMESE|EXIGENT|SENSIBLE|LONGHAIR|MOUSSE|POUCH|LATA)\b/;
+const CANINE_KEYWORDS = /\b(DOG|PERRO|CANINE)\b/;
+
+export const lineFromName = (nombre: string): string | null => {
+  const n = (nombre ?? "").toUpperCase();
+  if (FELINE_KEYWORDS.test(n)) {
+    return VET_KEYWORDS.test(n) ? "VETERINARY FELINE" : "FELINE";
+  }
+  if (CANINE_KEYWORDS.test(n)) {
+    return VET_KEYWORDS.test(n) ? "VETERINARY CANINE" : "CANINE";
+  }
+  return null;
+};
+
 /** Razas (Pequeñas/Medianas/Grandes) derivadas del nombre o sublínea. */
 export const razasOf = (nombre: string, subline: string | null): string | null => {
   const n = nombre.toUpperCase();
