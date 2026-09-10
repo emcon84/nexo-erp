@@ -1,20 +1,23 @@
 /**
- * Generación del PDF del listado de precios actualizados (vista previa de la
- * actualización masiva) con jsPDF + autoTable: PDF con TEXTO real (buscable),
- * agrupado por marca, columnas Producto | Precio.
+ * Generación del PDF del listado de la actualización masiva (vista previa) con
+ * jsPDF + autoTable, con EL MISMO diseño que la planilla mayorista:
+ * SECO/HÚMEDO → marca → talla → razas, bandas de color, texto real (buscable).
  */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { BulkPricePreviewRow } from "@/services/productService";
 import orgLogoUrl from "@/assets/logo-horizontal-almacen.png";
-
-const formatPrice = (n: number | null | undefined) =>
-  n === null || n === undefined
-    ? "-"
-    : `$${Number(n).toLocaleString("es-AR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      })}`;
+import { GroupRow } from "./exportPlanillaPdf";
+import {
+  formatPrice,
+  esHumedito,
+  displayName,
+  tallaOf,
+  razasOf,
+  TALLA_COLORS,
+  RAZAS_COLORS,
+  BRAND_COLORS,
+} from "./planillaGroups";
 
 /** Carga un asset local como data URL + tamaño natural (para no deformar). */
 const loadLogo = async (
@@ -44,21 +47,82 @@ const loadLogo = async (
   }
 };
 
-/**
- * Genera y descarga el PDF del listado de precios actualizados.
- * Devuelve el nombre del archivo, o null si no hay filas.
- */
+const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [number, number, number] };
+
+/** Arma el body: SECO/HÚMEDO → marca → talla → razas → productos (con precios). */
+const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
+  // cada fila con su marca/talla/razas derivadas del nombre.
+  const withGroups = rows.map((r) => ({
+    r,
+    brand: (r.brandValues?.join(", ") || "Sin marca").trim() || "Sin marca",
+    talla: tallaOf(r.name),
+    razas: razasOf(r.name, null),
+    humedo: esHumedito(r.name),
+  }));
+
+  const body: (string | GroupRow)[][] = [];
+
+  const pushBlock = (label: string, list: typeof withGroups) => {
+    if (list.length === 0) return;
+    body.push([{ content: label, colSpan: 4, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
+
+    const byBrand = new Map<string, typeof list>();
+    for (const p of list) {
+      if (!byBrand.has(p.brand)) byBrand.set(p.brand, []);
+      byBrand.get(p.brand)!.push(p);
+    }
+    for (const [brand, prods] of byBrand) {
+      const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
+      body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
+      const byTalla = new Map<string, typeof prods>();
+      for (const p of prods) {
+        if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
+        byTalla.get(p.talla)!.push(p);
+      }
+      for (const [talla, tp] of byTalla) {
+        const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
+        body.push([{ content: talla || brand, colSpan: 4, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
+        const byRazas = new Map<string | null, typeof tp>();
+        for (const p of tp) {
+          const k = p.razas;
+          if (!byRazas.has(k)) byRazas.set(k, []);
+          byRazas.get(k)!.push(p);
+        }
+        for (const [razas, rp] of byRazas) {
+          if (razas) {
+            const rColor = RAZAS_COLORS[razas] ?? [100, 116, 139];
+            body.push([{ content: razas, colSpan: 4, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
+          }
+          for (const p of rp) {
+            body.push([
+              displayName(p.r.name, p.brand),
+              formatPrice(p.r.oldPrice),
+              formatPrice(p.r.newPrice),
+              formatPrice(p.r.delta),
+            ] as unknown as GroupRow[]);
+          }
+        }
+      }
+    }
+  };
+
+  pushBlock("ALIMENTO SECO", withGroups.filter((p) => !p.humedo));
+  pushBlock("ALIMENTO HÚMEDO", withGroups.filter((p) => p.humedo));
+  return body;
+};
+
+/** Genera y descarga el PDF del listado de precios actualizados. */
 export const exportBulkPricePdf = async (
   rows: BulkPricePreviewRow[],
 ): Promise<string | null> => {
-  if (rows.length === 0) return null;
+  const body = buildBody(rows);
+  if (body.length === 0) return null;
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const margin = 30;
   const pageW = doc.internal.pageSize.getWidth();
   let y = 40;
 
-  // Logo (izquierda, sin deformar) + título (derecha) — sin "mayorista".
   const logo = await loadLogo(orgLogoUrl);
   if (logo) {
     const logoW = 130;
@@ -74,34 +138,17 @@ export const exportBulkPricePdf = async (
   doc.text(`${new Date().toLocaleDateString("es-AR")} · ${rows.length} productos`, rightX, y + 31, { align: "right" });
   y += 52;
 
-  // Agrupar por marca.
-  const byBrand = new Map<string, BulkPricePreviewRow[]>();
-  for (const row of rows) {
-    const b = (row.brandValues?.join(", ") || "Sin marca").trim() || "Sin marca";
-    if (!byBrand.has(b)) byBrand.set(b, []);
-    byBrand.get(b)!.push(row);
-  }
-  const body: (string | { content: string; colSpan: number; styles: Record<string, unknown> })[][] = [];
-  for (const [brand, items] of byBrand) {
-    body.push([{
-      content: brand,
-      colSpan: 2,
-      styles: { fontSize: 10, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 },
-    }]);
-    for (const it of items) {
-      body.push([it.name, formatPrice(it.newPrice)]);
-    }
-  }
-
   autoTable(doc, {
     startY: y,
-    head: [["Producto", "Precio"]],
+    head: [["Producto", "Precio actual", "Precio nuevo", "Δ"]],
     body: body as never,
     margin: { left: margin, right: margin, top: margin, bottom: 24 },
-    styles: { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.15 },
-    headStyles: { fillColor: [229, 231, 235], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, halign: "left" },
+    styles: { ...ROW_STYLES, cellPadding: 2.5, lineColor: [0, 0, 0], lineWidth: 0.15 },
+    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, halign: "left" },
     columnStyles: {
-      1: { halign: "right", cellWidth: 80 },
+      1: { halign: "right", cellWidth: 62 },
+      2: { halign: "right", cellWidth: 62 },
+      3: { halign: "right", cellWidth: 52 },
     },
     theme: "grid",
   });

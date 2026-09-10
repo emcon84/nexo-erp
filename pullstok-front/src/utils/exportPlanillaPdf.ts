@@ -1,67 +1,42 @@
 /**
- * Generación de la planilla mayorista en PDF con jsPDF + autoTable.
- * A diferencia del print del navegador (que rasteriza a imágenes), acá se
- * dibuja TEXTO REAL: el PDF se puede buscar/seleccionar y la paginación la
- * maneja autoTable (compacta, sin páginas en blanco).
+ * Generación de la planilla mayorista en PDF con jsPDF + autoTable (texto real,
+ * buscable). Usa los helpers compartidos de planillaGroups para que el diseño
+ * (seco/húmedo → marca → talla → razas) sea idéntico al de la actualización.
  */
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { PriceListDetail } from "@/services/priceLists";
 import { groupByPdfHierarchy } from "@/lib/printGrouping";
 import orgLogoUrl from "@/assets/logo-horizontal-almacen.png";
+import {
+  formatPrice,
+  redondearPrecio,
+  esHumedito,
+  normalizeLine,
+  displayName,
+  isNonFood,
+  tallaOf,
+  razasOf,
+  TALLA_COLORS,
+  RAZAS_COLORS,
+  BRAND_COLORS,
+} from "./planillaGroups";
 
-const formatPrice = (n: number | null | undefined) =>
-  n === null || n === undefined
-    ? "-"
-    : `$${Number(n).toLocaleString("es-AR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      })}`;
-
-const redondearPrecio = (n: number | null | undefined): number | null =>
-  n == null ? null : n >= 500 ? Math.round(n / 100) * 100 : n;
-
-/** Precio mayorista = sin IVA + 21% (IVA) + 15% de ganancia (todos los
- * productos). La base para la actualización masiva NO lleva el 15% (esa se
- * guarda aparte en product.price sin ganancia). */
+/** Precio mayorista = sin IVA + 21% (IVA) + 15% de ganancia (todos). La base
+ * para la actualización masiva NO lleva el 15% (se guarda aparte). */
 const precioMayorista = (sinIva: number | null | undefined): number | null =>
   sinIva == null ? null : redondearPrecio(Math.round(sinIva * 1.21 * 1.15 * 100) / 100);
 
-const esHumedito = (nombre: string): boolean =>
-  /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
+/** Margen al público: el Sugerido se deriva del Precio mayorista × este factor. */
+const SUGERIDO_FACTOR = 1.3334;
 
-const normalizeLine = (line: string | null): string | null => {
-  if (!line) return line;
-  const l = line.trim().toUpperCase();
-  if (/^ADULTO$/i.test(l)) return "ADULT";
-  if (/^GATOADULTO$/i.test(l)) return "GATO ADULTO";
-  if (/^CACHORRO$/i.test(l)) return "CACHORROS";
-  return line;
+/** Sugerido = Precio mayorista (con el +15%) × margen al público. */
+const publico = (sinIva: number | null | undefined): number | null => {
+  const mayorista = precioMayorista(sinIva);
+  return mayorista == null ? null : redondearPrecio(Math.round(mayorista * SUGERIDO_FACTOR * 100) / 100);
 };
 
-const LEAK_PREFIX =
-  /^(?:RAZAS?\s+(?:PEQUEÑAS|PEQUENAS|MEDIANAS|GRANDES)|ADULTOS?|CACHORROS?|SENIOR|PUPPY|KITTEN|HÚMEDO|HUMEDO)\s+/i;
-
-const displayName = (nombre: string, brand: string | null | undefined): string => {
-  let n = nombre.replace(LEAK_PREFIX, "");
-  n = n.replace(/^\d{5,8}\s+/, "");
-  n = n.replace(/^[A-Z]{2}\d{2,3}[A-Z]?\s+/, "");
-  if (brand && !n.toUpperCase().startsWith(brand.toUpperCase())) {
-    n = `${brand} ${n}`;
-  }
-  return n.replace(/\s+/g, " ").trim();
-};
-
-/** Productos NO alimento (limpieza, piedra sanitaria, ambientadores...) que
- * vienen en la planilla pero no deben estar en la lista mayorista de alimento. */
-const NON_FOOD =
-  /\b(CITRICA|LAVANDA|MARINA|NEUTRA|LIMÓN|LIMON|MANZANA|ROSAS|MONKCAT|BENTONITA|SÍLICA|SILICA|PIEDRAS SANITARIAS|ARENA)\b/i;
-
-const isNonFood = (nombre: string, unit: string | null): boolean =>
-  NON_FOOD.test(nombre) || /^\d+([.,]\d+)?\s*[lL]$/.test(unit ?? ""); // litros → no alimento
-
-/** Carga un asset local como data URL y devuelve su data URL + tamaño natural,
- * para dibujarlo SIN deformar (respetando su proporción real). */
+/** Carga un asset local como data URL + tamaño natural (para no deformar). */
 const loadLogo = async (
   url: string,
 ): Promise<{ dataUrl: string; width: number; height: number } | null> => {
@@ -91,24 +66,16 @@ const loadLogo = async (
 
 const ROW_STYLES = { fontSize: 8.5, cellPadding: 2.5, textColor: [0, 0, 0] as [number, number, number] };
 
-/** Margen al público: el Sugerido se deriva del Precio mayorista × este factor. */
-const SUGERIDO_FACTOR = 1.3334;
-
-/** Sugerido = Precio mayorista (con el +15%) × margen al público. */
-const publico = (sinIva: number | null | undefined): number | null => {
-  const mayorista = precioMayorista(sinIva);
-  return mayorista == null ? null : redondearPrecio(Math.round(mayorista * SUGERIDO_FACTOR * 100) / 100);
-};
-
-interface GroupRow {
+export interface GroupRow {
   content: string | number;
   colSpan?: number;
+  rowSpan?: number;
+  label?: string;
   styles?: Record<string, unknown>;
 }
 
-/** Arma el body de autoTable a partir de las secciones (seco/húmedo → marca →
- * sección band + productos), con grupos de fila a lo ancho tipo banda. */
-const buildBody = (plan: PriceListDetail): GroupRow[][] => {
+/** Arma el body de autoTable: SECO/HÚMEDO → marca → talla → razas → productos. */
+const buildBody = (plan: PriceListDetail): (string | GroupRow)[][] => {
   const sections = groupByPdfHierarchy(
     plan.sections.map((s) => ({ ...s, line: normalizeLine(s.line) })),
   ).filter((s) => !/^IVA$/i.test(s.subline ?? ""));
@@ -126,53 +93,12 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     }))
     .filter((s) => s.entries.length > 0);
 
-  const body: GroupRow[][] = [];
-
-  /** TALLA / etapa (línea normalizada) en el rotulado del proveedor. */
-  const tallaOf = (line: string | null): string => {
-    const l = (line ?? "").toUpperCase();
-    if (l === "PUPPY") return "CACHORROS";
-    if (l === "ADULT") return "ADULTOS";
-    if (l === "KITTEN") return "GATOS";
-    if (l === "SENIOR") return "SENIOR";
-    return line ?? "";
-  };
-
-  /** Razas (Pequeñas/Medianas/Grandes) derivadas del nombre o sublínea. */
-  const razasOf = (nombre: string, subline: string | null): string | null => {
-    const n = nombre.toUpperCase();
-    const s = (subline ?? "").toUpperCase();
-    if (/\b(MINI|X-SMALL|X SMALL|SMALL BREED)\b/.test(n) || /PEQUEÑA|PEQUENA|SMALL|MINI/.test(s)) return "RAZAS PEQUEÑAS";
-    if (/\b(MEDIUM BREED)\b/.test(n) || /MEDIANA|MEDIUM/.test(s)) return "RAZAS MEDIANAS";
-    if (/\b(LARGE BREED|MAXI|GIANT)\b/.test(n) || /GRANDE|MAXI|LARGE/.test(s)) return "RAZAS GRANDES";
-    return null;
-  };
-
-  // Talla + razas + marca con su color (parecido al proveedor).
-  const TALLA_COLORS: Record<string, [number, number, number]> = {
-    CACHORROS: [88, 28, 135],
-    ADULTOS: [17, 24, 39],
-    SENIOR: [30, 58, 138],
-    GATOS: [126, 34, 206],
-  };
-  const RAZAS_COLORS: Record<string, [number, number, number]> = {
-    "RAZAS PEQUEÑAS": [107, 33, 168],
-    "RAZAS MEDIANAS": [180, 83, 9],
-    "RAZAS GRANDES": [14, 116, 144],
-  };
-  const BRAND_COLORS: Record<string, [number, number, number]> = {
-    EUKANUBA: [16, 122, 87],
-    "ROYAL CANIN": [157, 23, 77],
-    MONKCAT: [146, 64, 14],
-    WIPUP: [2, 132, 199],
-    ASADITOS: [190, 24, 93],
-  };
+  const body: (string | GroupRow)[][] = [];
 
   const pushBlock = (label: string, list: typeof sections) => {
     if (list.length === 0) return;
     body.push([{ content: label, colSpan: 4, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
 
-    // Aplanar productos con su marca/talla/razas.
     const products = list.flatMap((s) =>
       s.entries.map((e) => ({
         e,
@@ -191,7 +117,6 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
     for (const [brand, prods] of byBrand) {
       const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
       body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
-      // agrupar por talla (línea)
       const byTalla = new Map<string, typeof prods>();
       for (const p of prods) {
         if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
@@ -200,7 +125,6 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
       for (const [talla, tp] of byTalla) {
         const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
         body.push([{ content: talla || brand, colSpan: 4, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
-        // agrupar por razas
         const byRazas = new Map<string | null, typeof tp>();
         for (const p of tp) {
           const k = p.razas;
@@ -230,10 +154,7 @@ const buildBody = (plan: PriceListDetail): GroupRow[][] => {
   return body;
 };
 
-/**
- * Genera y descarga el PDF de la planilla mayorista. Devuelve el nombre del
- * archivo generado (o null si no hay contenido).
- */
+/** Genera y descarga el PDF de la planilla mayorista. */
 export const exportPlanillaPdf = async (plan: PriceListDetail): Promise<string | null> => {
   const body = buildBody(plan);
   if (body.length === 0) return null;
@@ -243,7 +164,6 @@ export const exportPlanillaPdf = async (plan: PriceListDetail): Promise<string |
   const pageW = doc.internal.pageSize.getWidth();
   let y = 40;
 
-  // Logo horizontal a la IZQUIERDA (sin deformar); título/sublítulo a la DERECHA
   const logo = await loadLogo(orgLogoUrl);
   if (logo) {
     const logoW = 130;
