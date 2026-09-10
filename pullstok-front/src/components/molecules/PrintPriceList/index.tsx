@@ -39,6 +39,24 @@ const precioMayorista = (sinIva: number | null | undefined): number | null => {
 /** Quita del nombre el prefijo que coincide con un token del encabezado de la
  * sección (marca/línea/sublínea) para no repetirlo en cada fila. Ej: bajo
  * "EUKANUBA · PUPPY", "EUKANUBA PUPPY SMALL BREED 1KG" → "SMALL BREED 1KG". */
+/** Etiquetas de sección/sublínea que a veces se cuelan al inicio del nombre
+ * (ej. "RAZAS PEQUEÑAS 7131030 EUKANUBA..."), antes del código y el producto. */
+const LEAK_PREFIX =
+  /^(?:RAZAS?\s+(?:PEQUEÑAS|PEQUENAS|MEDIANAS|GRANDES)|ADULTOS?|CACHORROS?|SENIOR|PUPPY|KITTEN|HÚMEDO|HUMEDO)\s+/i;
+
+/** Nombre a mostrar: quita etiqueta de sección y código sueltos del inicio, y
+ * antepone la MARCA (ej. "ROYAL CANIN") cuando el nombre no la trae. Deja el
+ * nombre autodescriptivo tipo planilla original ("EUKANUBA PUPPY SMALL BREED 1KG"). */
+const displayName = (nombre: string, brand: string | null | undefined): string => {
+  let n = nombre.replace(LEAK_PREFIX, "");
+  n = n.replace(/^\d{5,8}\s+/, ""); // código numérico suelto al inicio
+  n = n.replace(/^[A-Z]{2}\d{2,3}[A-Z]?\s+/, ""); // SKU alfanumérico (CW34H)
+  if (brand && !n.toUpperCase().startsWith(brand.toUpperCase())) {
+    n = `${brand} ${n}`;
+  }
+  return n.replace(/\s+/g, " ").trim();
+};
+
 /** True si el nombre ya expresa el peso de la unidad (para no repetir la
  * sublínea: "X 1.02 KG" + "(1.02 KG)" → se omite la sublínea). */
 const nameAlreadyCarriesWeight = (
@@ -105,7 +123,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
           </TableHeader>
           <TableBody>
             {section.entries.map((entry) => {
-              const nombre = entry.name;
+              const nombre = displayName(entry.name, section.brand);
               const showUnit =
                 entry.unit && !nameAlreadyCarriesWeight(nombre, entry.unit);
               return (

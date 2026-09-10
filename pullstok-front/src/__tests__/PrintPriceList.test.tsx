@@ -103,7 +103,7 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
     render(<PrintPriceList plan={planMixto} />);
     expect(screen.getByText("Alimento seco")).toBeInTheDocument();
     expect(screen.getByText("Alimento húmedo")).toBeInTheDocument();
-    expect(screen.getByText("GC WEIGHT CONTROL X 0.4 KG")).toBeInTheDocument();
-    expect(screen.getByText("URINARY WET POUCH X 1.02 KG")).toBeInTheDocument();
+    expect(screen.getByText("ROYAL CANIN GC WEIGHT CONTROL X 0.4 KG")).toBeInTheDocument();
+    expect(screen.getByText("ROYAL CANIN URINARY WET POUCH X 1.02 KG")).toBeInTheDocument();
   });
 });
