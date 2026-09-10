@@ -159,7 +159,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
 
       {seco.length > 0 && (
         <>
-          <h2 className="mb-2 border-b pb-1 text-base font-bold uppercase">
+          <h2 className="mb-3 border-b-2 pb-1 text-xl font-black uppercase">
             Alimento seco
           </h2>
           {renderSections(seco)}
@@ -168,7 +168,7 @@ export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
 
       {humedo.length > 0 && (
         <>
-          <h2 className="mb-2 border-b pb-1 text-base font-bold uppercase">
+          <h2 className="mb-3 border-b-2 pb-1 text-xl font-black uppercase">
             Alimento húmedo
           </h2>
           {renderSections(humedo)}
