@@ -615,7 +615,13 @@ function inferLineaFromName(nombre: string): string | null {
 
   // Royal Canin / otros proveedores (no Eukanuba)
   if (!/EUKANUBA/i.test(nombre)) {
-    // VETERINARY toma prioridad sobre CANINE/FELINE
+    // MEDICADOS (VETERINARY HEALTH NUTRITION): keywords terapéuticos con
+    // prioridad sobre FELINE/CANINE/SIZE. Son los productos "medicados" que
+    // llevan una ganancia distinta (HYPOALLERGENIC, RENAL, GASTRO, URINARY, etc.)
+    if (/HYPOALLERGENIC|ANALLERGENIC|GASTRO|HEPATIC|RENAL|DERMATO|URINARY|DIABETIC|MOBILITY|CARDIAC|CALM FELINE|CALM CANINE|SATIETY|RECOVERY|FIBRE|NEUTERED|MATURE|ALLERGENIC|WEIGHT CONTROL|VETERINARY/i.test(upper)) {
+      return /CANINE/i.test(upper) ? "VETERINARY CANINE" : "VETERINARY FELINE";
+    }
+    // VETERINARY explícito
     if (/VETERINARY/i.test(upper)) return /CANINE/i.test(upper) ? "VETERINARY CANINE" : "VETERINARY FELINE";
     // Tamaño (SIZE) antes que gama, para "SIZE HEALTH NUTRITION" (mini/medio/maxi/giant)
     if (/\bMINI\b/i.test(upper)) return "SIZE MINI";
