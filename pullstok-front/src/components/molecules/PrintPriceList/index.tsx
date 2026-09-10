@@ -83,6 +83,18 @@ const headerParts = (
 const esHumedito = (nombre: string): boolean =>
   /\b(WET|HÚMEDO|HUMEDO|POUCH|LATA|LÍQUIDO|LIQUID|MOUSSE)\b/i.test(nombre);
 
+/** Normaliza la línea de la sección para que variantes ES/EN del proveedor se
+ * fusionen en un solo grupo (ej. "ADULT" y "ADULTO" → "ADULT"). Evita secciones
+ * duplicadas tipo "EUKANUBA · ADULT" + "EUKANUBA · ADULTO". */
+const normalizeLine = (line: string | null): string | null => {
+  if (!line) return line;
+  const l = line.trim().toUpperCase();
+  if (/^ADULTO$/i.test(l)) return "ADULT";
+  if (/^GATOADULTO$/i.test(l)) return "GATO ADULTO";
+  if (/^CACHORRO$/i.test(l)) return "CACHORROS";
+  return line;
+};
+
 /**
  * Área imprimible de la planilla mayorista (sdd/alican-wholesale-price-list):
  * encabezado con logo horizontal oficial, jerarquía DEL PDF (marca → línea →
@@ -91,7 +103,9 @@ const esHumedito = (nombre: string): boolean =>
  * PrintProductList/PrintBulkPriceList.
  */
 export const PrintPriceList = ({ plan }: PrintPriceListProps) => {
-  const sections = groupByPdfHierarchy(plan.sections);
+  const sections = groupByPdfHierarchy(
+    plan.sections.map((s) => ({ ...s, line: normalizeLine(s.line) })),
+  );
 
   // Separar alimento SECO de HÚMEDO según el nombre del producto. Se particiona
   // cada sección del PDF en sus entradas secas y húmedas, para mostrar primero
