@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import defaultLogoUrl from "@/assets/LogoPullNegroHor.svg";
+import orgLogoUrl from "@/assets/logo-horizontal-almacen.png";
 
 interface PrintHeaderProps {
   title: ReactNode;
@@ -7,14 +7,13 @@ interface PrintHeaderProps {
 }
 
 /**
- * Encabezado imprimible con el logo horizontal oficial (LogoPullNegroHor):
- * "EL ALMACEN DE LAS MASCOTAS". Se usa en TODAS las áreas imprimibles
- * (listado de productos, planilla mayorista, bulk price y planilla por kg) con
- * esa marca, independientemente del branding.logoUrl cargado (que apunta a un
- * ícono circular).
+ * Encabezado imprimible con el logo HORIZONTAL de la organización
+ * ("EL ALMACEN DE LAS MASCOTAS", assets/logo-horizontal-almacen.png). Se usa en
+ * TODAS las áreas imprimibles (listado de productos, planilla mayorista, bulk
+ * price y planilla por kg) con esa marca.
  */
 export const PrintHeader = ({ title, subtitle }: PrintHeaderProps) => {
-  const logoUrl = defaultLogoUrl;
+  const logoUrl = orgLogoUrl;
 
   return (
     <div className="mb-4 flex items-center gap-3">

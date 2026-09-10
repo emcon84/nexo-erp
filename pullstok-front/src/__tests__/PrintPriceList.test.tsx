@@ -49,7 +49,7 @@ describe("PrintPriceList — área imprimible de la planilla mayorista", () => {
   it("muestra el logo horizontal en el encabezado", () => {
     render(<PrintPriceList plan={plan} />);
     const logo = screen.getByTestId("print-logo") as HTMLImageElement;
-    expect(logo.src).toContain("LogoPullNegroHor");
+    expect(logo.src).toContain("logo-horizontal-almacen");
   });
 
   it("renderiza la jerarquía del PDF (marca · línea · sublínea) y las filas", () => {
