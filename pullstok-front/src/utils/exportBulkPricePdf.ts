@@ -64,7 +64,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
 
   const pushBlock = (label: string, list: typeof withGroups) => {
     if (list.length === 0) return;
-    body.push([{ content: label, colSpan: 4, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
+    body.push([{ content: label, colSpan: 2, styles: { fontSize: 11, fontStyle: "bold", fillColor: [17, 24, 39], textColor: [255, 255, 255], cellPadding: 4 } }]);
 
     const byBrand = new Map<string, typeof list>();
     for (const p of list) {
@@ -73,7 +73,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
     }
     for (const [brand, prods] of byBrand) {
       const bColor = BRAND_COLORS[brand.toUpperCase()] ?? [30, 41, 59];
-      body.push([{ content: brand, colSpan: 4, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
+      body.push([{ content: brand, colSpan: 2, styles: { fontSize: 10.5, fontStyle: "bold", fillColor: bColor, textColor: [255, 255, 255], cellPadding: 4 } }]);
       const byTalla = new Map<string, typeof prods>();
       for (const p of prods) {
         if (!byTalla.has(p.talla)) byTalla.set(p.talla, []);
@@ -81,7 +81,7 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
       }
       for (const [talla, tp] of byTalla) {
         const tColor = TALLA_COLORS[talla] ?? [30, 41, 59];
-        body.push([{ content: talla || brand, colSpan: 4, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
+        body.push([{ content: talla || brand, colSpan: 2, styles: { fontSize: 9.5, fontStyle: "bold", fillColor: tColor, textColor: [255, 255, 255], cellPadding: 3.5 } }]);
         const byRazas = new Map<string | null, typeof tp>();
         for (const p of tp) {
           const k = p.razas;
@@ -91,14 +91,12 @@ const buildBody = (rows: BulkPricePreviewRow[]): (string | GroupRow)[][] => {
         for (const [razas, rp] of byRazas) {
           if (razas) {
             const rColor = RAZAS_COLORS[razas] ?? [100, 116, 139];
-            body.push([{ content: razas, colSpan: 4, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
+            body.push([{ content: razas, colSpan: 2, styles: { fontSize: 8.5, fontStyle: "bold", fillColor: rColor, textColor: [255, 255, 255], cellPadding: 3 } }]);
           }
           for (const p of rp) {
             body.push([
               displayName(p.r.name, p.brand),
-              formatPrice(p.r.oldPrice),
               formatPrice(p.r.newPrice),
-              formatPrice(p.r.delta),
             ] as unknown as GroupRow[]);
           }
         }
@@ -140,15 +138,13 @@ export const exportBulkPricePdf = async (
 
   autoTable(doc, {
     startY: y,
-    head: [["Producto", "Precio actual", "Precio nuevo", "Δ"]],
+    head: [["Producto", "Precio"]],
     body: body as never,
     margin: { left: margin, right: margin, top: margin, bottom: 24 },
     styles: { ...ROW_STYLES, cellPadding: 2.5, lineColor: [0, 0, 0], lineWidth: 0.15 },
     headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9, halign: "left" },
     columnStyles: {
-      1: { halign: "right", cellWidth: 62 },
-      2: { halign: "right", cellWidth: 62 },
-      3: { halign: "right", cellWidth: 52 },
+      1: { halign: "right", cellWidth: 70 },
     },
     theme: "grid",
   });
