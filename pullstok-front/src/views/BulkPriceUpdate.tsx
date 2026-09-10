@@ -72,6 +72,39 @@ interface PriceListSectionSummary {
   position: number;
 }
 
+/**
+ * Borrador persistido en localStorage del proceso de actualización de precios.
+ * Se guarda con el botón "Guardar borrador" y se restaura al volver a la vista,
+ * hasta que se aplica (entonces se limpia). Cubre todos los filtros, % /
+ * ganancia y overrides configurables por el usuario.
+ */
+const DRAFT_KEY = "pullstok-bulk-price-update-draft";
+
+interface PriceUpdateDraft {
+  selectedBrands: string[];
+  selectedProviderIds: string[];
+  selectedPriceListId: string;
+  selectedPriceListTypes: ("SECO" | "WET")[];
+  selectedSectionIds: string[];
+  categoryIds: string[];
+  percentage: string;
+  margin: string;
+  excludedIds: string[];
+  categoryOverrides: Record<string, string>;
+  productOverrides: Record<string, string>;
+  sectionOverrides: Record<string, string>;
+  sectionMarginsState: Record<string, string>;
+}
+
+const loadDraft = (): PriceUpdateDraft | null => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as PriceUpdateDraft) : null;
+  } catch {
+    return null;
+  }
+};
+
 const formatPrice = (n: number) =>
   `$${n.toLocaleString("es-AR", {
     minimumFractionDigits: 2,
@@ -134,6 +167,9 @@ export const BulkPriceUpdate = () => {
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
+  // Borrador persistido en localStorage (se aplica una sola vez al montar la
+  // vista, para restaurar la configuración guardada antes de aplicar).
+  const [restoredDraft] = useState<PriceUpdateDraft | null>(() => loadDraft());
 
   const headers = () => {
     const token = localStorage.getItem("token");
@@ -178,14 +214,15 @@ export const BulkPriceUpdate = () => {
       .catch(() => setProviders([]));
   }, []);
 
-  // Carga las secciones de una planilla y limpia la selección previa.
-  const loadSections = useCallback((id: string) => {
+  // Carga las secciones de una planilla. restoreSectionIds permite restaurar la
+  // selección de líneas de un borrador guardado; si se omite, limpia la anterior
+  // (el usuario cambiando de planilla limpia preview/exclusiones en el handler).
+  const loadSections = useCallback((id: string, restoreSectionIds: string[] = []) => {
     fetch(`${API_URL}/price-lists/${id}`, { headers: headers() })
       .then((res) => res.json())
       .then((data) => {
         setSections(data.sections ?? []);
-        setSelectedSectionIds([]);
-        scopeChanged();
+        setSelectedSectionIds(restoreSectionIds);
       })
       .catch(() => {
         setSections([]);
@@ -193,17 +230,29 @@ export const BulkPriceUpdate = () => {
       });
   }, []);
 
-  // Load price lists (most recent first); preselecciona la primera y carga sus
-  // secciones.
+  // Load price lists (most recent first); si hay un borrador guardado se
+  // restaura su planilla y líneas seleccionadas, sino se preselecciona la
+  // primera y carga sus secciones.
   useEffect(() => {
     fetch(`${API_URL}/price-lists`, { headers: headers() })
       .then((res) => res.json())
       .then((data) => {
         const items = (data.items ?? []) as PriceListSummary[];
         setPriceLists(items);
+
+        // Restaura el borrador guardado (todos los filtros/overrides) antes de
+        // elegir planilla, porque selectedSectionIds se setea abajo.
+        applyRestoredDraft();
+
         if (items.length > 0) {
-          setSelectedPriceListId(items[0].id);
-          loadSections(items[0].id);
+          const savedId = restoredDraft?.selectedPriceListId;
+          const target = items.find((pl) => pl.id === savedId);
+          const chosen = target ?? items[0];
+          setSelectedPriceListId(chosen.id);
+          loadSections(
+            chosen.id,
+            target ? restoredDraft?.selectedSectionIds ?? [] : [],
+          );
         }
       })
       .catch(() => setPriceLists([]));
@@ -215,6 +264,47 @@ export const BulkPriceUpdate = () => {
     setExcludedIds(new Set());
     setCategoryOverrides({});
     setPage(1);
+  };
+
+  // Aplica el borrador guardado (una vez, al montar) restaurando la
+  // configuración completa del proceso de actualización de precios.
+  const applyRestoredDraft = () => {
+    if (!restoredDraft) return;
+    setSelectedBrands(restoredDraft.selectedBrands ?? []);
+    setSelectedProviderIds(restoredDraft.selectedProviderIds ?? []);
+    setSelectedPriceListTypes(restoredDraft.selectedPriceListTypes ?? []);
+    setCategoryIds(restoredDraft.categoryIds ?? []);
+    setPercentage(restoredDraft.percentage ?? "");
+    setMargin(restoredDraft.margin ?? "");
+    setExcludedIds(new Set(restoredDraft.excludedIds ?? []));
+    setCategoryOverrides(restoredDraft.categoryOverrides ?? {});
+    setProductOverrides(restoredDraft.productOverrides ?? {});
+    setSectionOverrides(restoredDraft.sectionOverrides ?? {});
+    setSectionMarginsState(restoredDraft.sectionMarginsState ?? {});
+    setPreview(null);
+    setPage(1);
+    toast.info("Borrador restaurado");
+  };
+
+  // Guarda el borrador actual del proceso en localStorage (se limpia al aplicar).
+  const saveDraft = () => {
+    const draft: PriceUpdateDraft = {
+      selectedBrands,
+      selectedProviderIds,
+      selectedPriceListId,
+      selectedPriceListTypes,
+      selectedSectionIds,
+      categoryIds,
+      percentage,
+      margin,
+      excludedIds: [...excludedIds],
+      categoryOverrides,
+      productOverrides,
+      sectionOverrides,
+      sectionMarginsState,
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    toast.success("Borrador guardado");
   };
 
   const toggleBrand = (value: string) => {
@@ -238,10 +328,12 @@ export const BulkPriceUpdate = () => {
     scopeChanged();
   };
 
-  // Cambia la planilla seleccionada y recarga sus secciones.
+  // Cambia la planilla seleccionada y recarga sus secciones (limpia preview/
+  // exclusiones del alcance anterior).
   const handlePriceListChange = (id: string) => {
     setSelectedPriceListId(id);
     loadSections(id);
+    scopeChanged();
   };
 
   // Grupos de LÍNEA (brand · line) sobre las secciones de la planilla actual;
@@ -384,6 +476,8 @@ export const BulkPriceUpdate = () => {
     try {
       const result = await bulkPriceUpdate(p, false);
       toast.success(`${result.affected} productos actualizados`);
+      // El borrador se aplicó: se limpia para no restaurar una corrida vieja.
+      localStorage.removeItem(DRAFT_KEY);
       navigate("/dashboard");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al aplicar";
@@ -964,6 +1058,13 @@ export const BulkPriceUpdate = () => {
 
         {/* Acciones: chicas, una al lado de la otra, alineadas a la derecha */}
         <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            disabled={submitting}
+            onClick={saveDraft}
+          >
+            Guardar borrador
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/dashboard")}

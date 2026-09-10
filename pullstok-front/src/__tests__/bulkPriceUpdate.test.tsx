@@ -13,7 +13,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("react-toastify", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+  toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 vi.mock("@/services/onboardingService", () => ({
@@ -470,6 +470,46 @@ describe("BulkPriceUpdate — preview, exclusions and apply", () => {
         true,
         1,
       ),
+    );
+  });
+
+  it("guarda el borrador en localStorage al tocar 'Guardar borrador'", async () => {
+    renderView();
+    await selectBrandAndPercent("15");
+    fireEvent.click(screen.getByRole("button", { name: /guardar borrador/i }));
+
+    const raw = localStorage.getItem("pullstok-bulk-price-update-draft");
+    expect(raw).not.toBeNull();
+    const draft = JSON.parse(raw!);
+    expect(draft.selectedBrands).toEqual(["Acme"]);
+    expect(draft.percentage).toBe("15");
+    expect(draft.margin).toBe("");
+  });
+
+  it("restaura el borrador guardado al volver a la vista", async () => {
+    localStorage.setItem(
+      "pullstok-bulk-price-update-draft",
+      JSON.stringify({
+        selectedBrands: ["Acme"],
+        selectedProviderIds: [],
+        selectedPriceListId: "",
+        selectedPriceListTypes: [],
+        selectedSectionIds: [],
+        categoryIds: [],
+        percentage: "25",
+        margin: "",
+        excludedIds: [],
+        categoryOverrides: {},
+        productOverrides: {},
+        sectionOverrides: {},
+        sectionMarginsState: {},
+      }),
+    );
+
+    renderView();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/porcentaje default/i)).toHaveValue(25),
     );
   });
 });
